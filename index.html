@@ -62,9 +62,9 @@ td, th{padding:8px;border:1px solid #ccc}
     Account Number: <span id="accountNumber"></span><br>
     Payment Address: <span id="paymentAddress"></span><br><br>
     <h2>Balance: $<span id="balance">10000</span></h2>
-    <button class="btn btn-success">Deposit</button>
-    <button class="btn btn-warning" onclick="goPayment()">Transfer</button>
-    <button class="btn btn-danger" onclick="goPayment()">Withdrawal</button>
+    <button class="btn btn-success" onclick="transaction('Deposit')">Deposit</button>
+    <button class="btn btn-warning" onclick="transaction('Transfer')">Transfer</button>
+    <button class="btn btn-danger" onclick="transaction('Withdrawal')">Withdrawal</button>
   </div>
 
   <!-- KYC UPDATE -->
@@ -84,9 +84,8 @@ td, th{padding:8px;border:1px solid #ccc}
 
   <!-- PAYMENT -->
   <div id="payment" class="card hidden">
-    <h3>Processing Fee Required</h3>
-    <p>Fee: <b>$50</b></p>
-    <p>Pay to address:</p>
+    <h3>Payment Required</h3>
+    <p>Please send the required amount to the assigned address:</p>
     <code id="paymentAddrCode"></code>
   </div>
 
@@ -166,7 +165,6 @@ function saveKYC(){
         profileImg.src = e.target.result;
         kycStatus.innerText = 'Verified';
 
-        // Save permanently in localStorage
         users = users.map(u => u.username === currentUser.username ? currentUser : u);
         localStorage.setItem('users', JSON.stringify(users));
         alert('KYC submitted successfully');
@@ -175,11 +173,35 @@ function saveKYC(){
     reader.readAsDataURL(file);
 }
 
+// Transaction function
+function transaction(type){
+    const amt = prompt(`Enter amount to ${type}:`);
+    if(!amt || isNaN(amt) || parseFloat(amt)<=0){ alert('Invalid amount'); return; }
+    const amount = parseFloat(amt);
+
+    // Show payment address for all transactions
+    alert(`Please pay $${amount} to address: ${currentUser.paymentAddress}`);
+
+    currentUser.history.push({
+        date: new Date().toLocaleString(),
+        type: type,
+        amount: amount,
+        status: 'Pending Payment'
+    });
+
+    users = users.map(u => u.username === currentUser.username ? currentUser : u);
+    localStorage.setItem('users', JSON.stringify(users));
+
+    goPayment();
+    renderHistory();
+}
+
 // Payment placeholder
 function goPayment(){
     showPage('payment');
     document.getElementById('paymentAddrCode').innerText = currentUser.paymentAddress || 'N/A';
 }
+
 function logout(){sessionStorage.clear();location.reload()}
 
 // Admin Panel secured
@@ -251,7 +273,7 @@ function renderHistory(){
     historyList.innerHTML='';
     currentUser.history.forEach(t=>{
         let p = document.createElement('p');
-        p.innerHTML=`${t.date} | ${t.type} | $${t.amount.toLocaleString()} | <b style='color:${t.status==='Successful'?'green':'red'}'>${t.status}</b>`;
+        p.innerHTML=`${t.date} | ${t.type} | $${t.amount.toLocaleString()} | <b style='color:${t.status==='Successful'?'green':'orange'}'>${t.status}</b>`;
         historyList.appendChild(p);
     });
 }
