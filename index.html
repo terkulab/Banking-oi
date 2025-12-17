@@ -2,124 +2,104 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swift Bank – Client Portal</title>
+<title>Demo Banking App</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Segoe UI,Tahoma,sans-serif;background:#eef2f6}
-.hidden{display:none}/* LOGIN */ .login{ min-height:100vh;display:flex;align-items:center;justify-content:center;padding:15px } .login-box{ width:100%;max-width:360px;background:#fff;border-radius:16px;padding:20px; box-shadow:0 10px 25px rgba(0,0,0,.15) } .login-box h2{text-align:center;color:#2c5364} .login-box input,.login-box button{ width:100%;padding:14px;margin:10px 0;border-radius:12px;border:1px solid #ddd } .login-box button{background:#2c5364;color:#fff;border:none;font-weight:600}
-
-/* APP */ .app{display:flex;min-height:100vh} .sidebar{width:220px;background:#0f2027;color:#fff;padding:18px;display:flex;flex-direction:column} .brand{font-size:20px;font-weight:700;margin-bottom:20px} .sidebar button{background:none;border:none;color:#fff;text-align:left;padding:12px;border-radius:10px;margin-bottom:6px} .sidebar button.active,.sidebar button:hover{background:#203a43} .spacer{flex:1} .logout{background:#b00020;padding:12px;border-radius:10px;border:none;color:#fff}
-
-.main{flex:1;padding:18px} .container{max-width:900px;margin:auto} .card{background:#fff;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 10px 24px rgba(0,0,0,.08)} .profile{display:flex;align-items:center;gap:14px} .profile img{width:72px;height:72px;border-radius:50%;object-fit:cover} .balance{font-size:28px;font-weight:700;color:#2c5364} .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px} .actions button{padding:14px;border-radius:12px;border:none;font-weight:600;color:#fff} .actions .dep{background:#2c5364} .actions .trf{background:#1565c0} .actions .wd{background:#6a1b9a}
-
-.notice{background:#fff3cd;color:#856404;padding:14px;border-radius:12px;margin-top:12px}
-
-/* TABLE */ table{width:100%;border-collapse:collapse} th,td{padding:12px;border-bottom:1px solid #eee} th{color:#2c5364}
-
-@media(max-width:768px){ .sidebar{width:80px} .brand{display:none} } </style>
-
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8}
+.hidden{display:none}
+.container{display:flex;min-height:100vh}
+.sidebar{width:220px;background:#0b2c4a;color:#fff;padding:20px}
+.sidebar h2{font-size:18px;margin-bottom:20px}
+.sidebar a{display:block;color:#fff;text-decoration:none;padding:10px;border-radius:5px;margin-bottom:8px}
+.sidebar a:hover{background:#144a7c}
+.main{flex:1;padding:20px}
+.card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.btn{padding:10px 15px;border:none;border-radius:5px;cursor:pointer}
+.btn-primary{background:#0b2c4a;color:#fff}
+.btn-danger{background:#c0392b;color:#fff}
+.btn-warning{background:#f39c12;color:#fff}
+.btn-success{background:#27ae60;color:#fff}
+.login-box{max-width:350px;margin:80px auto;background:#fff;padding:30px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.15)}
+input{width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:5px}
+img.profile{width:80px;height:80px;border-radius:50%;object-fit:cover}
+@media(max-width:768px){.sidebar{width:70px}.sidebar h2{display:none}.sidebar a{font-size:12px;padding:8px}}
+</style>
 </head>
-<body><!-- LOGIN PAGE --><div class="login" id="loginPage">
-  <div class="login-box">
-    <h2>Client Login</h2>
-    <input type="text" id="loginUser" placeholder="Username">
-    <input type="password" id="loginPass" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <p style="font-size:13px;color:#666;text-align:center">Login details are provided by admin</p>
+<body><!-- LOGIN PAGE --><div id="loginPage" class="login-box">
+<h2>Bank Login</h2>
+<input type="text" id="loginUser" placeholder="Username">
+<input type="password" id="loginPass" placeholder="Password">
+<button class="btn btn-primary" onclick="login()">Login</button>
+<p id="loginError" style="color:red"></p>
+</div><!-- APP --><div id="app" class="container hidden">
+  <div class="sidebar">
+    <h2>My Bank</h2>
+    <a href="#" onclick="showPage('dashboard')">Dashboard</a>
+    <a href="#" onclick="showPage('kyc')">KYC</a>
+    <a href="#" onclick="showPage('history')">History</a>
+    <a href="#" onclick="logout()">Logout</a>
   </div>
-</div><!-- MAIN APP --><div class="app hidden" id="app">
-  <aside class="sidebar">
-    <div class="brand">Swift Bank</div>
-    <button class="active" onclick="show('dash')">Dashboard</button>
-    <button onclick="show('hist')">History</button>
-    <div class="spacer"></div>
-    <button class="logout" onclick="logout()">Logout</button>
-  </aside>  <main class="main">
-    <div class="container"><!-- DASHBOARD -->
-  <section id="dash" class="card">
-    <div class="profile">
-      <img id="pimg" src="https://via.placeholder.com/120">
-      <div>
-        <strong id="pname"></strong><br>
-        <small id="puser"></small>
-      </div>
-    </div>
-    <hr style="border:none;border-top:1px solid #eee;margin:14px 0">
-    <div>Account Balance</div>
-    <div class="balance">$<span id="bal"></span></div>
-
-    <div class="actions">
-      <button class="dep">Deposit</button>
-      <button class="trf" onclick="goPayment('Transfer')">Transfer</button>
-      <button class="wd" onclick="goPayment('Withdrawal')">Withdrawal</button>
-    </div>
-  </section>
-
-  <!-- HISTORY -->
-  <section id="hist" class="card hidden">
-    <h3>Transaction History</h3>
-    <table>
-      <thead>
-        <tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>2025-01-12</td>
-          <td>Withdrawal</td>
-          <td>$5,000.00</td>
-          <td style="color:green;font-weight:600">Successful</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- PAYMENT PAGE -->
-  <section id="pay" class="card hidden">
-    <h3 id="payTitle"></h3>
-    <p>To continue, pay the <b>$50 processing fee</b> using the details below:</p>
-    <div class="notice">
-      <b>Account:</b> 9876543210<br>
-      <b>Bank:</b> Swift Demo Bank<br>
-      <b>Name:</b> Processing Fee
-    </div>
-    <button style="margin-top:12px" onclick="backDash()">I have paid</button>
-  </section>
-
+  <div class="main"><!-- DASHBOARD -->
+<div id="dashboard" class="card">
+  <h3>Dashboard</h3>
+  <img src="https://via.placeholder.com/80" class="profile" id="profileImg"><br><br>
+  <strong id="fullName"></strong><br>
+  Username: <span id="username"></span><br>
+  KYC Status: <b>Verified</b><br><br>
+  <h2>Balance: $10,000</h2>
+  <button class="btn btn-success">Deposit</button>
+  <button class="btn btn-warning" onclick="goPayment()">Transfer</button>
+  <button class="btn btn-danger" onclick="goPayment()">Withdrawal</button>
 </div>
 
-  </main>
+<!-- KYC -->
+<div id="kyc" class="card hidden">
+  <h3>KYC Information</h3>
+  <p>Name: <span id="kycName"></span></p>
+  <p>Address: 123 Demo Street</p>
+  <p>ID Number: A12345678</p>
+</div>
+
+<!-- HISTORY -->
+<div id="history" class="card hidden">
+  <h3>Transaction History</h3>
+  <p>2025-01-12 | Withdrawal | $5,000.00 | <b style="color:green">Successful</b></p>
+</div>
+
+<!-- PAYMENT -->
+<div id="payment" class="card hidden">
+  <h3>Processing Fee Required</h3>
+  <p>Fee: <b>$50</b></p>
+  <p>Pay to address:</p>
+  <code>1A9fBTCxyz123DemoAddress</code>
+</div>
+
+  </div>
 </div><script>
-// ADMIN-REGISTERED USER (EDIT THIS MANUALLY)
-const user={
-  username:'client001',
-  password:'pass123',
-  name:'John Doe',
-  balance:10000,
-  photo:'https://via.placeholder.com/120'
-};
+// ADMIN REGISTERED USER
+const user={username:'user1',password:'pass123',name:'John Doe'};
 
 function login(){
-  if(loginUser.value===user.username && loginPass.value===user.password){
-    pname.innerText=user.name;
-    puser.innerText='@'+user.username;
-    pimg.src=user.photo;
-    bal.innerText=user.balance.toLocaleString();
-    loginPage.classList.add('hidden');
-    app.classList.remove('hidden');
-  } else alert('Invalid login details');
+  const u=document.getElementById('loginUser').value;
+  const p=document.getElementById('loginPass').value;
+  if(u===user.username && p===user.password){
+    sessionStorage.setItem('loggedIn','yes');
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('fullName').innerText=user.name;
+    document.getElementById('username').innerText=user.username;
+    document.getElementById('kycName').innerText=user.name;
+  }else{
+    document.getElementById('loginError').innerText='Invalid login details';
+  }
 }
 
-function show(id){
-  ['dash','hist','pay'].forEach(s=>document.getElementById(s).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
+function showPage(page){
+  ['dashboard','kyc','history','payment'].forEach(p=>document.getElementById(p).classList.add('hidden'));
+  document.getElementById(page).classList.remove('hidden');
 }
 
-function goPayment(type){
-  payTitle.innerText=type+' Payment';
-  show('pay');
-}
+function goPayment(){showPage('payment')}
 
-function backDash(){ show('dash'); }
-function logout(){ location.reload(); }
+function logout(){sessionStorage.clear();location.reload()}
 </script></body>
 </html>
