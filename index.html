@@ -1,0 +1,166 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile Banking UI</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+    }.container {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 18px;
+  color: #2c5364;
+  font-size: 22px;
+}
+
+input, button {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 15px;
+}
+
+button {
+  background: #2c5364;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:active { transform: scale(0.98); }
+
+.dashboard { display: none; }
+
+.card {
+  background: linear-gradient(135deg, #1c92d2, #38ef7d);
+  color: #fff;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 18px;
+}
+
+.card p {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+.balance {
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 12px;
+}
+
+.actions button {
+  background: #0f2027;
+}
+
+.actions button:nth-child(2) { background: #00695c; }
+.actions button:nth-child(3) { background: #1565c0; }
+
+.logout {
+  margin-top: 15px;
+  background: #b00020;
+}
+
+@media (max-width: 360px) {
+  .balance { font-size: 26px; }
+  h2 { font-size: 20px; }
+}
+
+  </style>
+</head>
+<body>  <!-- LOGIN -->  <div class="container" id="loginBox">
+    <h2>Mobile Bank Login</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+  </div>  <!-- DASHBOARD -->  <div class="container dashboard" id="dashboard">
+    <h2>My Account</h2><div class="card">
+  <p><strong>Name:</strong> <span id="name">User</span></p>
+  <p><strong>Account No:</strong> 1234567890</p>
+  <p>Available Balance</p>
+  <div class="balance">₦<span id="balance">50000</span></div>
+</div>
+
+<div class="actions">
+  <input type="number" id="amount" placeholder="Enter Amount" />
+  <button onclick="deposit()">Deposit</button>
+  <button onclick="withdraw()">Withdraw</button>
+  <button onclick="transfer()">Transfer</button>
+</div>
+
+<button class="logout" onclick="logout()">Logout</button>
+
+  </div><script>
+  let balance = 50000;
+
+  function login() {
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    if (user && pass) {
+      document.getElementById('name').innerText = user;
+      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+    } else {
+      alert('Enter login details');
+    }
+  }
+
+  function updateBalance() {
+    document.getElementById('balance').innerText = balance;
+  }
+
+  function deposit() {
+    let amt = Number(document.getElementById('amount').value);
+    if (amt > 0) {
+      balance += amt;
+      updateBalance();
+    }
+  }
+
+  function withdraw() {
+    let amt = Number(document.getElementById('amount').value);
+    if (amt > 0 && amt <= balance) {
+      balance -= amt;
+      updateBalance();
+    } else {
+      alert('Insufficient balance');
+    }
+  }
+
+  function transfer() {
+    let amt = Number(document.getElementById('amount').value);
+    if (amt > 0 && amt <= balance) {
+      balance -= amt;
+      updateBalance();
+      alert('Transfer successful');
+    }
+  }
+
+  function logout() {
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginBox').style.display = 'block';
+  }
+</script></body>
+</html>
