@@ -95,7 +95,7 @@ td, th{padding:8px;border:1px solid #ccc}
     <input type="text" id="newUsername" placeholder="Username">
     <input type="password" id="newPassword" placeholder="Password">
     <input type="text" id="newName" placeholder="Full Name">
-    <input type="number" id="newBalance" placeholder="Initial Balance" value="10000">
+    <input type="number" id="newBalance" placeholder="Initial Balance" value="100000">
     <input type="text" id="newAccountNumber" placeholder="Account Number">
     <input type="text" id="newPaymentAddress" placeholder="Payment Address">
     <button class="btn btn-primary" onclick="addUser()">Add User</button>
@@ -112,11 +112,11 @@ td, th{padding:8px;border:1px solid #ccc}
 
 <script>
 // Admin credentials
-const adminUser = {username: 'admin', password: 'admin123', name: 'Administrator'};
+const adminUser = {username: 'admin101', password: 'pass123', name: 'Administrator'};
 
 // Users stored in localStorage
 let users = JSON.parse(localStorage.getItem('users')) || [
-  {username:'user1',password:'pass123',name:'John Doe',balance:10000,accountNumber:'12345678',paymentAddress:'1A9fBTCxyz123DemoAddress',kyc:{status:'Not Updated',photo:'https://via.placeholder.com/80',address:''},history:[]}
+  {username:'admin101',password:'pass123',name:'Processor Yoo✌️',balance:100,000,accountNumber:'12345678',paymentAddress:'1A9fBTCxyz123DemoAddress',kyc:{status:'Not Updated',photo:'https://via.placeholder.com/80',address:''},history:[]}
 ];
 localStorage.setItem('users', JSON.stringify(users));
 
