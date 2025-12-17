@@ -1,3 +1,4 @@
+
 <!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -68,7 +69,7 @@ else alert('Invalid login');
 function withdraw(){
 const amt=Number(wdAmount.value);
 if(amt>0 && amt<=userData.balance){
-payNotice.innerHTML="To withdraw <b>₦"+amt+"</b>, please first pay <b>$5,000.00</b> to:<br><br><b>Account:</b> 1234567890<br><b>Bank:</b> Swift Demo Bank<br><b>Name:</b> Processing Fee";
+payNotice.innerHTML="To withdraw <b>₦"+amt+"</b>, please first pay <b>₦500</b> to:<br><br><b>Account:</b> 1234567890<br><b>Bank:</b> Swift Demo Bank<br><b>Name:</b> Processing Fee";
 payNotice.classList.remove('hidden');}
 else alert('Invalid amount');
 }
@@ -78,57 +79,5 @@ function uploadPhoto(e){alert('Photo uploaded successfully');}
 function logout(){dashboard.classList.add('hidden');loginBox.classList.remove('hidden');}
 function showLogin(){signupBox.classList.add('hidden');loginBox.classList.remove('hidden');}
 function showSignup(){loginBox.classList.add('hidden');signupBox.classList.remove('hidden');}
-</script></body>
-</htm
-  </div><script>
-  let balance = 50000;
-
-  function login() {
-    const user = document.getElementById('username').value;
-    const pass = document.getElementById('password').value;
-    if (user && pass) {
-      document.getElementById('name').innerText = user;
-      document.getElementById('loginBox').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
-    } else {
-      alert('Enter login details');
-    }
-  }
-
-  function updateBalance() {
-    document.getElementById('balance').innerText = balance;
-  }
-
-  function deposit() {
-    let amt = Number(document.getElementById('amount').value);
-    if (amt > 0) {
-      balance += amt;
-      updateBalance();
-    }
-  }
-
-  function withdraw() {
-    let amt = Number(document.getElementById('amount').value);
-    if (amt > 0 && amt <= balance) {
-      balance -= amt;
-      updateBalance();
-    } else {
-      alert('Insufficient balance');
-    }
-  }
-
-  function transfer() {
-    let amt = Number(document.getElementById('amount').value);
-    if (amt > 0 && amt <= balance) {
-      balance -= amt;
-      updateBalance();
-      alert('Transfer successful');
-    }
-  }
-
-  function logout() {
-    document.getElementById('dashboard').style.display = 'none';
-    document.getElementById('loginBox').style.display = 'block';
-  }
 </script></body>
 </html>
