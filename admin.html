@@ -3,18 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Login</title>
+<title>Admin Panel</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="center">
+<body>
 
-<div class="login-box">
-  <h2>Admin Login</h2>
-  <input id="adminEmail" placeholder="Admin Username">
-  <input id="adminPassword" type="password" placeholder="Password">
-  <button id="adminLoginBtn">Login</button>
-</div>
+<header><h2>Admin Panel</h2></header>
 
-<script type="module" src="js/auth.js"></script>
+<main>
+<section class="card">
+<h3>Add User</h3>
+<input id="newName" placeholder="Full Name">
+<input id="newEmail" placeholder="Email">
+<input id="newPass" placeholder="Password">
+<input id="newBalance" placeholder="Balance">
+<input id="newAccount" placeholder="Account Number">
+<input id="newPayment" placeholder="Payment Address">
+<button id="addUserBtn">Add User</button>
+</section>
+
+<section class="card" id="usersList">
+<h3>Users</h3>
+<div id="usersContainer"></div>
+</section>
+</main>
+
+<script type="module" src="js/admin.js"></script>
 </body>
 </html>
