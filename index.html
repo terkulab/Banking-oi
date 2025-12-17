@@ -8,48 +8,32 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif;}
 body{background:#f0f2f5;min-height:100vh;}
-
-/* LOGIN */
 #loginSection{display:flex;justify-content:center;align-items:center;height:100vh;}
 .login-box{background:#fff;padding:40px;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,0.15);width:100%;max-width:400px;text-align:center;}
 .login-box input, .login-box button{width:100%;padding:12px;margin:12px 0;border-radius:8px;border:1px solid #ccc;}
 .login-box button{background:#0A2540;color:#fff;font-weight:600;border:none;cursor:pointer;}
 .login-box h2{color:#0A2540;margin-bottom:20px;}
-
-/* DASHBOARD */
 #dashboardSection{display:none;}
 .sidebar{position:fixed;top:0;left:0;height:100%;width:250px;background:#0A2540;color:#fff;padding:20px;transition:all 0.3s ease;}
 .sidebar h3{margin-bottom:20px;}
 .sidebar button{width:100%;padding:12px;margin:6px 0;border:none;border-radius:8px;background:#1b3b70;color:#fff;cursor:pointer;}
 .main-content{margin-left:260px;padding:20px;transition:all 0.3s ease;}
-
-/* CARDS */
 .card{background:#fff;padding:20px;margin:10px 0;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.1);}
 .card h3{color:#0A2540;margin-bottom:12px;}
 .flex button{margin-right:10px;}
-
-/* TABLE */
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{padding:12px;border:1px solid #ccc;text-align:left;}
 th{background:#0A2540;color:#fff;}
-
-/* MODAL */
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;}
 .modal-content{background:#fff;padding:30px;border-radius:12px;width:90%;max-width:400px;position:relative;}
 .modal-content input, .modal-content button{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:1px solid #ccc;}
 .modal-content button{background:#0A2540;color:#fff;font-weight:600;border:none;cursor:pointer;}
 .modal .close{position:absolute;top:10px;right:10px;background:red;color:#fff;padding:5px 10px;border:none;border-radius:50%;cursor:pointer;}
-
-@media(max-width:768px){
-  .sidebar{width:200px;position:fixed;left:-220px;}
-  .main-content{margin-left:0;}
-  .sidebar.active{left:0;}
-}
+@media(max-width:768px){.sidebar{width:200px;position:fixed;left:-220px;}.main-content{margin-left:0;}.sidebar.active{left:0;}}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <section id="loginSection">
   <div class="login-box">
     <h2>Login</h2>
@@ -59,7 +43,6 @@ th{background:#0A2540;color:#fff;}
   </div>
 </section>
 
-<!-- DASHBOARD -->
 <section id="dashboardSection">
   <div class="sidebar" id="sidebar">
     <h3>Menu</h3>
@@ -68,10 +51,7 @@ th{background:#0A2540;color:#fff;}
     <button id="historyBtn">History</button>
     <button id="logoutBtn">Logout</button>
   </div>
-
   <div class="main-content" id="mainContent">
-
-    <!-- USER DASHBOARD -->
     <div id="dashboardContent" class="card">
       <h3>User Dashboard</h3>
       <p><b>Name:</b> <span id="userName"></span></p>
@@ -84,7 +64,6 @@ th{background:#0A2540;color:#fff;}
       </div>
     </div>
 
-    <!-- KYC -->
     <div id="kycContent" class="card" style="display:none;">
       <h3>KYC Information</h3>
       <p><b>Name:</b> <span id="kycName"></span></p>
@@ -93,13 +72,11 @@ th{background:#0A2540;color:#fff;}
       <p><b>KYC Status:</b> <span id="kycStatus"></span></p>
     </div>
 
-    <!-- HISTORY -->
     <div id="historyContent" class="card" style="display:none;">
       <h3>Transaction History</h3>
       <div id="historyList">No transactions yet</div>
     </div>
 
-    <!-- ADMIN PANEL -->
     <div id="adminContent" class="card" style="display:none;">
       <h3>Admin Panel - Add User</h3>
       <input type="text" id="addUserName" placeholder="Name">
@@ -112,17 +89,13 @@ th{background:#0A2540;color:#fff;}
 
       <h3>Pending Transactions</h3>
       <table>
-        <thead>
-          <tr><th>User ID</th><th>Type</th><th>Amount</th><th>Address</th><th>Action</th></tr>
-        </thead>
+        <thead><tr><th>User ID</th><th>Type</th><th>Amount</th><th>Address</th><th>Action</th></tr></thead>
         <tbody id="pendingTable"></tbody>
       </table>
     </div>
-
   </div>
 </section>
 
-<!-- MODAL -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <button class="close" id="modalClose">X</button>
@@ -136,9 +109,8 @@ th{background:#0A2540;color:#fff;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, collection, addDoc, setDoc, doc, getDoc, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-// ✅ Firebase Config
 const firebaseConfig = {  
   apiKey: "AIzaSyCpGwKbyOW_LQPrTKoNvDjW_oTD9_cxsnc",  
   authDomain: "n26-bank-888bc.firebaseapp.com",  
@@ -147,70 +119,59 @@ const firebaseConfig = {
   messagingSenderId: "112126821080",  
   appId: "1:112126821080:web:e455b16ffc29164d290dad"  
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser;
+const adminUser = {email:"admin@bankapp.com",password:"Admin1234!",uid:"admin123",name:"Admin User",role:"admin"};
 
-// Hardcoded Admin
-const adminUser = {
-  email: "admin@bankapp.com",
-  password: "Admin1234!",
-  uid: "admin123",
-  name: "Admin User",
-  role: "admin"
-};
+const loginSection=document.getElementById('loginSection');
+const dashboardSection=document.getElementById('dashboardSection');
+const emailInput=document.getElementById('email');
+const passwordInput=document.getElementById('password');
+const loginBtn=document.getElementById('loginBtn');
 
-// DOM
-const loginSection = document.getElementById('loginSection');
-const dashboardSection = document.getElementById('dashboardSection');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const loginBtn = document.getElementById('loginBtn');
+const dashboardContent=document.getElementById('dashboardContent');
+const kycContent=document.getElementById('kycContent');
+const historyContent=document.getElementById('historyContent');
+const adminContent=document.getElementById('adminContent');
 
-const dashboardContent = document.getElementById('dashboardContent');
-const kycContent = document.getElementById('kycContent');
-const historyContent = document.getElementById('historyContent');
-const adminContent = document.getElementById('adminContent');
+const userNameEl=document.getElementById('userName');
+const userBalanceEl=document.getElementById('userBalance');
+const userAccountEl=document.getElementById('userAccount');
 
-const userNameEl = document.getElementById('userName');
-const userBalanceEl = document.getElementById('userBalance');
-const userAccountEl = document.getElementById('userAccount');
+const kycNameEl=document.getElementById('kycName');
+const kycEmailEl=document.getElementById('kycEmail');
+const kycAccountEl=document.getElementById('kycAccount');
+const kycStatusEl=document.getElementById('kycStatus');
 
-const kycNameEl = document.getElementById('kycName');
-const kycEmailEl = document.getElementById('kycEmail');
-const kycAccountEl = document.getElementById('kycAccount');
-const kycStatusEl = document.getElementById('kycStatus');
+const logoutBtn=document.getElementById('logoutBtn');
+const depositBtn=document.getElementById('depositBtn');
+const transferBtn=document.getElementById('transferBtn');
+const withdrawBtn=document.getElementById('withdrawBtn');
 
-const logoutBtn = document.getElementById('logoutBtn');
-const depositBtn = document.getElementById('depositBtn');
-const transferBtn = document.getElementById('transferBtn');
-const withdrawBtn = document.getElementById('withdrawBtn');
+const dashboardBtn=document.getElementById('dashboardBtn');
+const kycBtn=document.getElementById('kycBtn');
+const historyBtn=document.getElementById('historyBtn');
 
-const dashboardBtn = document.getElementById('dashboardBtn');
-const kycBtn = document.getElementById('kycBtn');
-const historyBtn = document.getElementById('historyBtn');
+const modal=document.getElementById('modal');
+const modalClose=document.getElementById('modalClose');
+const modalTitle=document.getElementById('modalTitle');
+const modalAmount=document.getElementById('modalAmount');
+const modalAddress=document.getElementById('modalAddress');
+const modalConfirm=document.getElementById('modalConfirm');
 
-const modal = document.getElementById('modal');
-const modalClose = document.getElementById('modalClose');
-const modalTitle = document.getElementById('modalTitle');
-const modalAmount = document.getElementById('modalAmount');
-const modalAddress = document.getElementById('modalAddress');
-const modalConfirm = document.getElementById('modalConfirm');
+const addUserBtn=document.getElementById('addUserBtn');
+const pendingTable=document.getElementById('pendingTable');
 
-const addUserBtn = document.getElementById('addUserBtn');
-const pendingTable = document.getElementById('pendingTable');
-
-// LOGIN
-loginBtn.onclick = async () => {
-  const email = emailInput.value.trim();
-  const password = passwordInput.value.trim();
-  if(!email||!password){ alert("Enter email & password"); return; }
+loginBtn.onclick=async()=>{
+  const email=emailInput.value.trim();
+  const password=passwordInput.value.trim();
+  if(!email||!password){alert("Enter email & password");return;}
 
   if(email===adminUser.email && password===adminUser.password){
-    currentUser = adminUser;
+    currentUser=adminUser;
     loginSection.style.display="none";
     dashboardSection.style.display="block";
     adminContent.style.display="block";
@@ -222,9 +183,9 @@ loginBtn.onclick = async () => {
   try{
     const userCred = await signInWithEmailAndPassword(auth,email,password);
     const snap = await getDoc(doc(db,"users",userCred.user.uid));
-    if(!snap.exists()){ alert("User not found"); return; }
-    const data = snap.data();
-    currentUser = {uid:userCred.user.uid,...data};
+    if(!snap.exists()){alert("User not found");return;}
+    const data=snap.data();
+    currentUser={uid:userCred.user.uid,...data};
     loginSection.style.display="none";
     dashboardSection.style.display="block";
 
@@ -238,23 +199,20 @@ loginBtn.onclick = async () => {
       loadUserDashboard();
       loadHistory();
     }
-  }catch(e){ alert("Login failed: "+e.message);}
+  }catch(e){alert("Login failed: "+e.message);}
 };
 
-// LOGOUT
-logoutBtn.onclick = ()=>{
+logoutBtn.onclick=()=>{
   currentUser=null;
   dashboardSection.style.display="none";
   loginSection.style.display="flex";
   emailInput.value=''; passwordInput.value='';
 };
 
-// NAVIGATION
-dashboardBtn.onclick=()=>{dashboardContent.style.display="block"; kycContent.style.display="none"; historyContent.style.display="none";}
-kycBtn.onclick=()=>{dashboardContent.style.display="none"; kycContent.style.display="block"; historyContent.style.display="none";}
-historyBtn.onclick=()=>{dashboardContent.style.display="none"; kycContent.style.display="none"; historyContent.style.display="block";}
+dashboardBtn.onclick=()=>{dashboardContent.style.display="block";kycContent.style.display="none";historyContent.style.display="none";}
+kycBtn.onclick=()=>{dashboardContent.style.display="none";kycContent.style.display="block";historyContent.style.display="none";}
+historyBtn.onclick=()=>{dashboardContent.style.display="none";kycContent.style.display="none";historyContent.style.display="block";}
 
-// DASHBOARD
 async function loadUserDashboard(){
   userNameEl.innerText=currentUser.name;
   userBalanceEl.innerText=currentUser.balance;
@@ -270,7 +228,6 @@ async function loadUserDashboard(){
   withdrawBtn.onclick=()=>{openModal("Withdraw")};
 }
 
-// MODAL
 function openModal(type){
   modalTitle.innerText=type;
   modalAmount.value="";
@@ -278,29 +235,28 @@ function openModal(type){
   modal.style.display="flex";
 
   modalConfirm.onclick = async ()=>{
-    let amt = parseFloat(modalAmount.value);
-    let addr = modalAddress.value.trim();
-    if(isNaN(amt)||amt<=0){ alert("Invalid amount"); return; }
-
-    let status = (type==="Deposit") ? "approved" : "pending";
+    let amt=parseFloat(modalAmount.value);
+    let addr=modalAddress.value.trim();
+    if(isNaN(amt)||amt<=0){alert("Invalid amount");return;}
+    let status=(type==="Deposit")?"approved":"pending";
 
     if(type==="Deposit"){
-      currentUser.balance += amt;
-      await updateDoc(doc(db,"users",currentUser.uid), {balance: currentUser.balance});
+      currentUser.balance+=amt;
+      await updateDoc(doc(db,"users",currentUser.uid),{balance:currentUser.balance});
       userBalanceEl.innerText=currentUser.balance;
     }
 
     await addDoc(collection(db,"transactions"),{
-      userId: currentUser.uid,
-      type: type,
-      amount: amt,
-      address: addr || null,
-      status: status,
-      timestamp: serverTimestamp()
+      userId:currentUser.uid,
+      type:type,
+      amount:amt,
+      address:addr||null,
+      status:status,
+      timestamp:serverTimestamp()
     });
 
-    if(type !== "Deposit"){ alert(`${type} request is pending admin approval`);}
-    else{ alert("Deposit successful!");}
+    if(type!=="Deposit"){alert(`${type} request is pending admin approval`);}
+    else{alert("Deposit successful!");}
 
     modal.style.display="none";
     loadHistory();
@@ -308,25 +264,24 @@ function openModal(type){
 }
 modalClose.onclick=()=>{modal.style.display="none";};
 
-// TRANSACTION HISTORY
 async function loadHistory(){
-  historyContent.innerHTML = `<h3>Transaction History</h3>`;
-  const table = document.createElement('table');
-  table.innerHTML = `<thead><tr>
+  historyContent.innerHTML=`<h3>Transaction History</h3>`;
+  const table=document.createElement('table');
+  table.innerHTML=`<thead><tr>
     <th>Type</th><th>Amount</th><th>Address</th><th>Status</th><th>Date</th>
   </tr></thead>`;
-  const tbody = document.createElement('tbody');
+  const tbody=document.createElement('tbody');
 
   const snap = await getDocs(collection(db,"transactions"));
   snap.forEach(d=>{
-    const t = d.data();
-    if(t.userId === currentUser.uid){
-      const row = document.createElement('tr');
-      row.innerHTML = `<td>${t.type}</td>
-                       <td>$${t.amount}</td>
-                       <td>${t.address||'-'}</td>
-                       <td>${t.status}</td>
-                       <td>${t.timestamp?.toDate().toLocaleString()||'Pending'}</td>`;
+    const t=d.data();
+    if(t.userId===currentUser.uid){
+      const row=document.createElement('tr');
+      row.innerHTML=`<td>${t.type}</td>
+                     <td>$${t.amount}</td>
+                     <td>${t.address||'-'}</td>
+                     <td>${t.status}</td>
+                     <td>${t.timestamp?.toDate().toLocaleString()||'Pending'}</td>`;
       tbody.appendChild(row);
     }
   });
@@ -334,67 +289,60 @@ async function loadHistory(){
   historyContent.appendChild(table);
 }
 
-// ADMIN FUNCTIONS
-addUserBtn.onclick = async ()=>{
-  const name = document.getElementById('addUserName').value.trim();
-  const email = document.getElementById('addUserEmail').value.trim();
-  const pass = document.getElementById('addUserPass').value.trim();
-  const account = document.getElementById('addUserAccount').value.trim();
-  const balance = parseFloat(document.getElementById('addUserBalance').value.trim()||0);
-  const address = document.getElementById('addUserAddress').value.trim();
-  if(!name||!email||!pass){ alert("Fill all fields"); return; }
+addUserBtn.onclick=async()=>{
+  const name=document.getElementById('addUserName').value.trim();
+  const email=document.getElementById('addUserEmail').value.trim();
+  const pass=document.getElementById('addUserPass').value.trim();
+  const account=document.getElementById('addUserAccount').value.trim();
+  const balance=parseFloat(document.getElementById('addUserBalance').value.trim()||0);
+  const address=document.getElementById('addUserAddress').value.trim();
+  if(!name||!email||!pass){alert("Fill all fields");return;}
   try{
-    const userCred = await createUserWithEmailAndPassword(auth,email,pass);
-    await addDoc(collection(db,"users"),{
-      uid:userCred.user.uid,
+    const userCred=await createUserWithEmailAndPassword(auth,email,pass);
+    await setDoc(doc(db,"users",userCred.user.uid),{
       name,email,role:"user",balance,accountNumber:account,paymentAddress:address,KYC:"Not uploaded"
     });
-    alert("User added!");
-  }catch(e){ alert("Failed: "+e.message);}
+    alert("User added successfully!");
+  }catch(e){alert("Failed: "+e.message);}
 };
 
-// Load pending transactions for admin
 async function loadPendingTransactions(){
   pendingTable.innerHTML="";
-  const snap = await getDocs(collection(db,"transactions"));
+  const snap=await getDocs(collection(db,"transactions"));
   snap.forEach(d=>{
-    const t = d.data();
+    const t=d.data();
     if(t.status==="pending"){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${t.userId}</td>
-                      <td>${t.type}</td>
-                      <td>$${t.amount}</td>
-                      <td>${t.address||'-'}</td>
-                      <td>
-                        <button onclick="approveTransaction('${d.id}',${t.amount},'${t.userId}')">Approve</button>
-                        <button onclick="rejectTransaction('${d.id}')">Reject</button>
-                      </td>`;
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${t.userId}</td>
+                     <td>${t.type}</td>
+                     <td>$${t.amount}</td>
+                     <td>${t.address||'-'}</td>
+                     <td>
+                      <button onclick="approveTransaction('${d.id}',${t.amount},'${t.userId}')">Approve</button>
+                      <button onclick="rejectTransaction('${d.id}')">Reject</button>
+                     </td>`;
       pendingTable.appendChild(tr);
     }
   });
 }
 
-// Approve
-window.approveTransaction = async (id, amt, uid)=>{
+window.approveTransaction=async(id,amt,uid)=>{
   await updateDoc(doc(db,"transactions",id),{status:"approved"});
-  const userRef = doc(db,"users",uid);
-  const snap = await getDoc(userRef);
+  const userRef=doc(db,"users",uid);
+  const snap=await getDoc(userRef);
   if(snap.exists()){
-    const data = snap.data();
-    if(data.balance>=amt){
-      await updateDoc(userRef,{balance:data.balance - amt});
-    }
+    const data=snap.data();
+    await updateDoc(userRef,{balance:data.balance-amt});
   }
   loadPendingTransactions();
   alert("Transaction approved!");
 }
 
-// Reject
-window.rejectTransaction = async (id)=>{
+window.rejectTransaction=async(id)=>{
   await updateDoc(doc(db,"transactions",id),{status:"rejected"});
   loadPendingTransactions();
   alert("Transaction rejected!");
 }
 </script>
 </body>
- </html>
+</html>
