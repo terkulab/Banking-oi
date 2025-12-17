@@ -1,1 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
 
+<header>
+  <span id="menu">☰</span>
+  <h3>N26 Bank</h3>
+</header>
+
+<nav id="drawer">
+  <a href="#" data-page="home">Dashboard</a>
+  <a href="#" data-page="kyc">KYC</a>
+  <a href="#" data-page="history">History</a>
+  <a href="#" id="logout">Logout</a>
+</nav>
+
+<main id="content"></main>
+
+<script type="module">
+import { auth, db } from './app.js';
+import { onAuthStateChanged, signOut } 
+from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+import { doc, getDoc } 
+from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    location.href = 'index.html';
+    return;
+  }
+
+  const snap = await getDoc(doc(db, 'users', user.uid));
+  const data = snap.data();
+
+  document.getElementById('content').innerHTML = `
+    <div class="card">
+      <h2>$${data.balance.toLocaleString()}</h2>
+      <p>Account No: ${data.accountNumber}</p>
+    </div>
+
+    <div class="actions">
+      <button>Deposit</button>
+      <button>Transfer</button>
+      <button>Withdraw</button>
+    </div>
+  `;
+});
+
+logout.onclick = () => signOut(auth).then(() => location.href='index.html');
+menu.onclick = () => drawer.classList.toggle('open');
+</script>
+
+</body>
+</html>
