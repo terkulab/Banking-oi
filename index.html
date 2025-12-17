@@ -2,126 +2,125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mobile Banking – Sign Up, Login & KYC</title>
+<title>Mobile Banking – Dashboard</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Segoe UI,Tahoma,sans-serif;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:15px}
-.container{width:100%;max-width:390px;background:#fff;border-radius:18px;padding:20px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
-h2{text-align:center;color:#2c5364;margin-bottom:15px}
-h3{margin:12px 0;color:#2c5364}
-input,button{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1px solid #ddd;font-size:15px}
-button{background:#2c5364;color:#fff;border:none;font-weight:600}
-button:active{transform:scale(.97)}
-.hidden{display:none}
-.card{background:linear-gradient(135deg,#1c92d2,#38ef7d);color:#fff;border-radius:16px;padding:18px;margin-bottom:15px}
-.balance{font-size:28px;font-weight:bold}
-.logout{background:#b00020}
-.notice{background:#fff3cd;color:#856404;padding:10px;border-radius:10px;font-size:14px;margin-top:10px}
-.profile{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:10px
-}
-.profile img{
-  width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #fff
-}
-.small{font-size:14px;color:#555}
-.link{text-align:center;font-size:14px;margin-top:8px}
-.link a{color:#2c5364;text-decoration:none;font-weight:600}
-</style>
+body{margin:0;font-family:Segoe UI,Tahoma,sans-serif;background:#eef2f6}
+.app{display:flex;min-height:100vh}
+/* LEFT PANE */
+.sidebar{width:220px;background:#0f2027;color:#fff;padding:18px;display:flex;flex-direction:column}
+.brand{font-size:20px;font-weight:700;margin-bottom:20px}
+.nav button{width:100%;background:transparent;color:#fff;border:none;text-align:left;padding:12px;border-radius:10px;margin-bottom:6px;font-size:15px}
+.nav button:hover,.nav button.active{background:#203a43}
+.spacer{flex:1}
+.logout{background:#b00020;border:none;color:#fff;padding:12px;border-radius:10px}/* MAIN */ .main{flex:1;padding:18px} .container{max-width:900px;margin:auto} .card{background:#fff;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 10px 24px rgba(0,0,0,.08)} .profile{display:flex;align-items:center;gap:14px} .profile img{width:72px;height:72px;border-radius:50%;object-fit:cover} .balance{font-size:28px;font-weight:700;color:#2c5364} .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px} .actions button{padding:14px;border-radius:12px;border:none;font-weight:600;background:#2c5364;color:#fff} .actions button.secondary{background:#1565c0} .actions button.warn{background:#6a1b9a} .notice{background:#fff3cd;color:#856404;padding:12px;border-radius:12px;margin-top:12px;display:none} .hidden{display:none}
+
+/* TABLE */ table{width:100%;border-collapse:collapse} th,td{padding:12px;border-bottom:1px solid #eee;text-align:left} th{color:#2c5364}
+
+@media(max-width:768px){ .sidebar{width:80px} .brand{display:none} .nav button{font-size:0} .nav button:after{content:'•';font-size:18px} } </style>
+
 </head>
-<body><!-- SIGN UP --><div class="container" id="signupBox">
-<h2>Create Account</h2>
-<input type="text" id="suName" placeholder="Full Name">
-<input type="text" id="suUser" placeholder="Username">
-<input type="password" id="suPass" placeholder="Password">
-<button onclick="signup()">Sign Up</button>
-<div class="link">Already have an account? <a href="#" onclick="showLogin()">Login</a></div>
-</div><!-- LOGIN --><div class="container hidden" id="loginBox">
-<h2>Login</h2>
-<input type="text" id="liUser" placeholder="Username">
-<input type="password" id="liPass" placeholder="Password">
-<button onclick="login()">Login</button>
-<div class="link">No account? <a href="#" onclick="showSignup()">Sign Up</a></div>
-</div><!-- DASHBOARD --><div class="container hidden" id="dashboard">
-<h2>My Bank</h2><div class="card">
-  <div class="profile">
-    <img id="profileImg" src="https://via.placeholder.com/70" />
-    <div>
-      <strong id="dName"></strong><br>
-      <span class="small" id="dUser"></span>
+<body><!-- SIMPLE AUTH (DEMO) --><script>
+// preset demo user
+const userData={
+  name:'John Doe',
+  username:'johndoe',
+  balance:10000,
+  address:'12 Palm Street, Lagos',
+  id:'ID-889920',
+  photo:'https://via.placeholder.com/120'
+};
+</script><div class="app">
+  <!-- LEFT PANE -->
+  <aside class="sidebar">
+    <div class="brand">Swift Bank</div>
+    <div class="nav">
+      <button class="active" onclick="show('dash')">Dashboard</button>
+      <button onclick="show('kyc')">KYC</button>
+      <button onclick="show('hist')">History</button>
     </div>
-  </div>
-  <p>Account Balance</p>
-  <div class="balance">$<span id="dBalance"></span></div>
-</div><button onclick="openKYC()">Update KYC</button>
+    <div class="spacer"></div>
+    <button class="logout" onclick="logout()">Logout</button>
+  </aside>  <!-- MAIN CONTENT -->  <main class="main">
+    <div class="container"><!-- DASHBOARD -->
+  <section id="dash" class="card">
+    <div class="profile">
+      <img id="pimg" src="" alt="profile" />
+      <div>
+        <strong id="pname"></strong><br>
+        <small id="puser"></small><br>
+        <small id="paddr"></small>
+      </div>
+    </div>
+    <hr style="border:none;border-top:1px solid #eee;margin:14px 0">
+    <div>Account Balance</div>
+    <div class="balance">$<span id="bal"></span></div>
 
-<h3>Withdraw</h3>
-<input type="number" id="wdAmount" placeholder="Amount">
-<button onclick="withdraw()">Withdraw</button>
-<div class="notice hidden" id="payNotice"></div><button class="logout" onclick="logout()">Logout</button>
+    <div class="actions">
+      <button onclick="deposit()">Deposit</button>
+      <button class="secondary" onclick="payPrompt('transfer')">Transfer</button>
+      <button class="warn" onclick="payPrompt('withdrawal')">Withdrawal</button>
+    </div>
+    <div class="notice" id="feeBox"></div>
+  </section>
 
-</div><!-- KYC PAGE --><div class="container hidden" id="kycPage">
-<h2>KYC Update</h2>
-<input type="file" accept="image/*" onchange="uploadPhoto(event)">
-<input type="text" id="kycAddress" placeholder="Residential Address">
-<input type="text" id="kycID" placeholder="ID / Passport Number">
-<button onclick="saveKYC()">Save KYC</button>
-<button class="logout" onclick="backToDash()">Back</button>
+  <!-- KYC -->
+  <section id="kyc" class="card hidden">
+    <h3>KYC Information</h3>
+    <p><b>Full Name:</b> <span id="kname"></span></p>
+    <p><b>Address:</b> <span id="kaddr"></span></p>
+    <p><b>ID Number:</b> <span id="kid"></span></p>
+    <p><b>Status:</b> Verified</p>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="hist" class="card hidden">
+    <h3>Transaction History</h3>
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>2025-01-12</td>
+          <td>Withdrawal</td>
+          <td>$5,000.00</td>
+          <td style="color:green;font-weight:600">Successful</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+  </main>
 </div><script>
-let userData={ balance:10000 };
+// init
+pimg.src=userData.photo;
+pname.innerText=userData.name;
+puser.innerText='@'+userData.username;
+paddr.innerText=userData.address;
+bal.innerText=userData.balance.toLocaleString();
+kname.innerText=userData.name;
+kaddr.innerText=userData.address;
+kid.innerText=userData.id;
 
-function signup(){
-  if(!suName.value||!suUser.value||!suPass.value){alert('Fill all fields');return;}
-  userData.name=suName.value;
-  userData.user=suUser.value;
-  userData.pass=suPass.value;
-  showLogin();
+function show(id){
+  ['dash','kyc','hist'].forEach(s=>document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
 }
 
-function login(){
-  if(liUser.value===userData.user && liPass.value===userData.pass){
-    dName.innerText=userData.name;
-    dUser.innerText='@'+userData.user;
-    dBalance.innerText=userData.balance.toLocaleString();
-    loginBox.classList.add('hidden');
-    dashboard.classList.remove('hidden');
-  } else alert('Invalid login details');
+function deposit(){ /* intentionally does nothing */ }
+
+function payPrompt(type){
+  feeBox.innerHTML=`To proceed with <b>${type}</b>, please pay a <b>$50 processing fee</b> to:<br><br>
+  <b>Account:</b> 9876543210<br>
+  <b>Bank:</b> Swift Demo Bank<br>
+  <b>Name:</b> Processing Fee`;
+  feeBox.style.display='block';
 }
 
-function openKYC(){
-  dashboard.classList.add('hidden');
-  kycPage.classList.remove('hidden');
-}
-
-function uploadPhoto(e){
-  const file=e.target.files[0];
-  if(file){
-    const reader=new FileReader();
-    reader.onload=function(){profileImg.src=reader.result;};
-    reader.readAsDataURL(file);
-  }
-}
-
-function saveKYC(){
-  userData.address=kycAddress.value;
-  userData.id=kycID.value;
-  alert('KYC details saved successfully');
-  backToDash();
-}
-
-function withdraw(){
-  const amt=Number(wdAmount.value);
-  if(amt>0 && amt<=userData.balance){
-    payNotice.innerHTML=`To withdraw <b>$${amt.toLocaleString()}</b>, please first pay a <b>$50 processing fee</b> to:<br><br><b>Account:</b> 9876543210<br><b>Bank:</b> Swift Demo Bank<br><b>Name:</b> Withdrawal Processing`;
-    payNotice.classList.remove('hidden');
-  } else alert('Invalid amount');
-}
-
-function logout(){dashboard.classList.add('hidden');loginBox.classList.remove('hidden');}
-function backToDash(){kycPage.classList.add('hidden');dashboard.classList.remove('hidden');}
-function showLogin(){signupBox.classList.add('hidden');loginBox.classList.remove('hidden');}
-function showSignup(){loginBox.classList.add('hidden');signupBox.classList.remove('hidden');}
+function logout(){ alert('Logged out'); }
 </script></body>
 </html>
