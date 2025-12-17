@@ -1,60 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>User Dashboard</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <header>
-  <span id="menu">☰</span>
-  <h3>N26 Bank</h3>
+  <button id="menuBtn">☰</button>
+  <h2>Dashboard</h2>
 </header>
 
-<nav id="drawer">
-  <a href="#" data-page="home">Dashboard</a>
-  <a href="#" data-page="kyc">KYC</a>
-  <a href="#" data-page="history">History</a>
-  <a href="#" id="logout">Logout</a>
+<nav id="sideMenu">
+  <a onclick="showSection('dash')">Dashboard</a>
+  <a onclick="showSection('kyc')">KYC</a>
+  <a onclick="showSection('history')">History</a>
+  <a onclick="logout()">Logout</a>
 </nav>
 
-<main id="content"></main>
+<main>
+<section id="dash" class="card">
+  <h3 id="name"></h3>
+  <p>Balance: $<span id="balance"></span></p>
+  <button onclick="action('Deposit')">Deposit</button>
+  <button onclick="action('Transfer')">Transfer</button>
+  <button onclick="action('Withdrawal')">Withdraw</button>
+</section>
 
-<script type="module">
-import { auth, db } from './app.js';
-import { onAuthStateChanged, signOut } 
-from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
-import { doc, getDoc } 
-from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+<section id="kyc" class="card hidden">
+  <h3>KYC Verification</h3>
+  <input type="text" id="address" placeholder="Residential Address">
+  <input type="file" id="passport">
+  <button onclick="uploadKYC()">Submit KYC</button>
+</section>
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    location.href = 'index.html';
-    return;
-  }
+<section id="history" class="card hidden">
+  <p>✔ Withdrawal $5,000.00 — Successful</p>
+</section>
+</main>
 
-  const snap = await getDoc(doc(db, 'users', user.uid));
-  const data = snap.data();
-
-  document.getElementById('content').innerHTML = `
-    <div class="card">
-      <h2>$${data.balance.toLocaleString()}</h2>
-      <p>Account No: ${data.accountNumber}</p>
-    </div>
-
-    <div class="actions">
-      <button>Deposit</button>
-      <button>Transfer</button>
-      <button>Withdraw</button>
-    </div>
-  `;
-});
-
-logout.onclick = () => signOut(auth).then(() => location.href='index.html');
-menu.onclick = () => drawer.classList.toggle('open');
-</script>
-
+<script type="module" src="js/dashboard.js"></script>
 </body>
 </html>
