@@ -46,3 +46,23 @@ window.uploadKYC = async ()=>{
 };
 
 window.logout = ()=> signOut(auth).then(()=>location.href="index.html");
+
+import { query, where, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+async function loadHistory(){
+  const container = document.getElementById("userHistory");
+  container.innerHTML = "";
+  const q = query(collection(db,"transactions"),where("userId","==",window.currentUser.uid));
+  const snap = await getDocs(q);
+  snap.forEach(d=>{
+    const tx = d.data();
+    const div = document.createElement("div");
+    div.innerText = `${tx.type} $${tx.amount} — ${tx.status}`;
+    container.appendChild(div);
+  });
+}
+window.showSection = function(id){
+  userSections.forEach(s=>document.getElementById(s).classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+  if(id === "history") loadHistory();
+}
