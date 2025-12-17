@@ -1,1 +1,11 @@
-
+body { margin:0;font-family:Inter,Arial;background:#f5f7fb;color:#0A2540 }
+.center { display:flex;justify-content:center;align-items:center;height:100vh }
+.login-card { width:90%;max-width:360px;background:#fff;padding:25px;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,.08) }
+.login-card input,button { width:100%;padding:12px;margin-top:12px;border-radius:8px;border:1px solid #ccc }
+button { background:#0A2540;color:#fff;border:none;font-weight:bold }
+header { display:flex;align-items:center;padding:15px;background:#0A2540;color:#fff }
+#drawer { position:fixed;left:-220px;top:0;height:100%;width:200px;background:#0A2540;padding:15px;transition:.3s }
+#drawer.open { left:0 }
+#drawer a { color:#fff;display:block;padding:10px;text-decoration:none }
+.card { background:#fff;padding:20px;border-radius:12px;margin:15px }
+.actions button { margin:8px 0 }
