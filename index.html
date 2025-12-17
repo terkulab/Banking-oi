@@ -2,54 +2,46 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mobile Banking – Dashboard</title>
+<title>Swift Bank – Client Portal</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Segoe UI,Tahoma,sans-serif;background:#eef2f6}
-.app{display:flex;min-height:100vh}
-/* LEFT PANE */
-.sidebar{width:220px;background:#0f2027;color:#fff;padding:18px;display:flex;flex-direction:column}
-.brand{font-size:20px;font-weight:700;margin-bottom:20px}
-.nav button{width:100%;background:transparent;color:#fff;border:none;text-align:left;padding:12px;border-radius:10px;margin-bottom:6px;font-size:15px}
-.nav button:hover,.nav button.active{background:#203a43}
-.spacer{flex:1}
-.logout{background:#b00020;border:none;color:#fff;padding:12px;border-radius:10px}/* MAIN */ .main{flex:1;padding:18px} .container{max-width:900px;margin:auto} .card{background:#fff;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 10px 24px rgba(0,0,0,.08)} .profile{display:flex;align-items:center;gap:14px} .profile img{width:72px;height:72px;border-radius:50%;object-fit:cover} .balance{font-size:28px;font-weight:700;color:#2c5364} .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px} .actions button{padding:14px;border-radius:12px;border:none;font-weight:600;background:#2c5364;color:#fff} .actions button.secondary{background:#1565c0} .actions button.warn{background:#6a1b9a} .notice{background:#fff3cd;color:#856404;padding:12px;border-radius:12px;margin-top:12px;display:none} .hidden{display:none}
+.hidden{display:none}/* LOGIN */ .login{ min-height:100vh;display:flex;align-items:center;justify-content:center;padding:15px } .login-box{ width:100%;max-width:360px;background:#fff;border-radius:16px;padding:20px; box-shadow:0 10px 25px rgba(0,0,0,.15) } .login-box h2{text-align:center;color:#2c5364} .login-box input,.login-box button{ width:100%;padding:14px;margin:10px 0;border-radius:12px;border:1px solid #ddd } .login-box button{background:#2c5364;color:#fff;border:none;font-weight:600}
 
-/* TABLE */ table{width:100%;border-collapse:collapse} th,td{padding:12px;border-bottom:1px solid #eee;text-align:left} th{color:#2c5364}
+/* APP */ .app{display:flex;min-height:100vh} .sidebar{width:220px;background:#0f2027;color:#fff;padding:18px;display:flex;flex-direction:column} .brand{font-size:20px;font-weight:700;margin-bottom:20px} .sidebar button{background:none;border:none;color:#fff;text-align:left;padding:12px;border-radius:10px;margin-bottom:6px} .sidebar button.active,.sidebar button:hover{background:#203a43} .spacer{flex:1} .logout{background:#b00020;padding:12px;border-radius:10px;border:none;color:#fff}
 
-@media(max-width:768px){ .sidebar{width:80px} .brand{display:none} .nav button{font-size:0} .nav button:after{content:'•';font-size:18px} } </style>
+.main{flex:1;padding:18px} .container{max-width:900px;margin:auto} .card{background:#fff;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 10px 24px rgba(0,0,0,.08)} .profile{display:flex;align-items:center;gap:14px} .profile img{width:72px;height:72px;border-radius:50%;object-fit:cover} .balance{font-size:28px;font-weight:700;color:#2c5364} .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px} .actions button{padding:14px;border-radius:12px;border:none;font-weight:600;color:#fff} .actions .dep{background:#2c5364} .actions .trf{background:#1565c0} .actions .wd{background:#6a1b9a}
+
+.notice{background:#fff3cd;color:#856404;padding:14px;border-radius:12px;margin-top:12px}
+
+/* TABLE */ table{width:100%;border-collapse:collapse} th,td{padding:12px;border-bottom:1px solid #eee} th{color:#2c5364}
+
+@media(max-width:768px){ .sidebar{width:80px} .brand{display:none} } </style>
 
 </head>
-<body><!-- SIMPLE AUTH (DEMO) --><script>
-// preset demo user
-const userData={
-  name:'John Doe',
-  username:'johndoe',
-  balance:10000,
-  address:'12 Palm Street, Lagos',
-  id:'ID-889920',
-  photo:'https://via.placeholder.com/120'
-};
-</script><div class="app">
-  <!-- LEFT PANE -->
+<body><!-- LOGIN PAGE --><div class="login" id="loginPage">
+  <div class="login-box">
+    <h2>Client Login</h2>
+    <input type="text" id="loginUser" placeholder="Username">
+    <input type="password" id="loginPass" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p style="font-size:13px;color:#666;text-align:center">Login details are provided by admin</p>
+  </div>
+</div><!-- MAIN APP --><div class="app hidden" id="app">
   <aside class="sidebar">
     <div class="brand">Swift Bank</div>
-    <div class="nav">
-      <button class="active" onclick="show('dash')">Dashboard</button>
-      <button onclick="show('kyc')">KYC</button>
-      <button onclick="show('hist')">History</button>
-    </div>
+    <button class="active" onclick="show('dash')">Dashboard</button>
+    <button onclick="show('hist')">History</button>
     <div class="spacer"></div>
     <button class="logout" onclick="logout()">Logout</button>
-  </aside>  <!-- MAIN CONTENT -->  <main class="main">
+  </aside>  <main class="main">
     <div class="container"><!-- DASHBOARD -->
   <section id="dash" class="card">
     <div class="profile">
-      <img id="pimg" src="" alt="profile" />
+      <img id="pimg" src="https://via.placeholder.com/120">
       <div>
         <strong id="pname"></strong><br>
-        <small id="puser"></small><br>
-        <small id="paddr"></small>
+        <small id="puser"></small>
       </div>
     </div>
     <hr style="border:none;border-top:1px solid #eee;margin:14px 0">
@@ -57,20 +49,10 @@ const userData={
     <div class="balance">$<span id="bal"></span></div>
 
     <div class="actions">
-      <button onclick="deposit()">Deposit</button>
-      <button class="secondary" onclick="payPrompt('transfer')">Transfer</button>
-      <button class="warn" onclick="payPrompt('withdrawal')">Withdrawal</button>
+      <button class="dep">Deposit</button>
+      <button class="trf" onclick="goPayment('Transfer')">Transfer</button>
+      <button class="wd" onclick="goPayment('Withdrawal')">Withdrawal</button>
     </div>
-    <div class="notice" id="feeBox"></div>
-  </section>
-
-  <!-- KYC -->
-  <section id="kyc" class="card hidden">
-    <h3>KYC Information</h3>
-    <p><b>Full Name:</b> <span id="kname"></span></p>
-    <p><b>Address:</b> <span id="kaddr"></span></p>
-    <p><b>ID Number:</b> <span id="kid"></span></p>
-    <p><b>Status:</b> Verified</p>
   </section>
 
   <!-- HISTORY -->
@@ -91,36 +73,53 @@ const userData={
     </table>
   </section>
 
+  <!-- PAYMENT PAGE -->
+  <section id="pay" class="card hidden">
+    <h3 id="payTitle"></h3>
+    <p>To continue, pay the <b>$50 processing fee</b> using the details below:</p>
+    <div class="notice">
+      <b>Account:</b> 9876543210<br>
+      <b>Bank:</b> Swift Demo Bank<br>
+      <b>Name:</b> Processing Fee
+    </div>
+    <button style="margin-top:12px" onclick="backDash()">I have paid</button>
+  </section>
+
 </div>
 
   </main>
 </div><script>
-// init
-pimg.src=userData.photo;
-pname.innerText=userData.name;
-puser.innerText='@'+userData.username;
-paddr.innerText=userData.address;
-bal.innerText=userData.balance.toLocaleString();
-kname.innerText=userData.name;
-kaddr.innerText=userData.address;
-kid.innerText=userData.id;
+// ADMIN-REGISTERED USER (EDIT THIS MANUALLY)
+const user={
+  username:'client001',
+  password:'pass123',
+  name:'John Doe',
+  balance:10000,
+  photo:'https://via.placeholder.com/120'
+};
+
+function login(){
+  if(loginUser.value===user.username && loginPass.value===user.password){
+    pname.innerText=user.name;
+    puser.innerText='@'+user.username;
+    pimg.src=user.photo;
+    bal.innerText=user.balance.toLocaleString();
+    loginPage.classList.add('hidden');
+    app.classList.remove('hidden');
+  } else alert('Invalid login details');
+}
 
 function show(id){
-  ['dash','kyc','hist'].forEach(s=>document.getElementById(s).classList.add('hidden'));
+  ['dash','hist','pay'].forEach(s=>document.getElementById(s).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
-  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
 }
 
-function deposit(){ /* intentionally does nothing */ }
-
-function payPrompt(type){
-  feeBox.innerHTML=`To proceed with <b>${type}</b>, please pay a <b>$50 processing fee</b> to:<br><br>
-  <b>Account:</b> 9876543210<br>
-  <b>Bank:</b> Swift Demo Bank<br>
-  <b>Name:</b> Processing Fee`;
-  feeBox.style.display='block';
+function goPayment(type){
+  payTitle.innerText=type+' Payment';
+  show('pay');
 }
 
-function logout(){ alert('Logged out'); }
+function backDash(){ show('dash'); }
+function logout(){ location.reload(); }
 </script></body>
 </html>
