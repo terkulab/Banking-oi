@@ -1,117 +1,85 @@
 <!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mobile Banking UI</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #333;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 15px;
-    }.container {
-  width: 100%;
-  max-width: 380px;
-  background: #fff;
-  border-radius: 18px;
-  padding: 22px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 18px;
-  color: #2c5364;
-  font-size: 22px;
-}
-
-input, button {
-  width: 100%;
-  padding: 14px;
-  margin: 10px 0;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  font-size: 15px;
-}
-
-button {
-  background: #2c5364;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-button:active { transform: scale(0.98); }
-
-.dashboard { display: none; }
-
-.card {
-  background: linear-gradient(135deg, #1c92d2, #38ef7d);
-  color: #fff;
-  border-radius: 18px;
-  padding: 20px;
-  margin-bottom: 18px;
-}
-
-.card p {
-  margin: 6px 0;
-  font-size: 14px;
-}
-
-.balance {
-  font-size: 30px;
-  font-weight: bold;
-  margin-top: 12px;
-}
-
-.actions button {
-  background: #0f2027;
-}
-
-.actions button:nth-child(2) { background: #00695c; }
-.actions button:nth-child(3) { background: #1565c0; }
-
-.logout {
-  margin-top: 15px;
-  background: #b00020;
-}
-
-@media (max-width: 360px) {
-  .balance { font-size: 26px; }
-  h2 { font-size: 20px; }
-}
-
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Banking – Sign Up & Login</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Tahoma,sans-serif;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:15px}
+.container{width:100%;max-width:380px;background:#fff;border-radius:18px;padding:20px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+h2{text-align:center;color:#2c5364;margin-bottom:15px}
+input,button{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1px solid #ddd;font-size:15px}
+button{background:#2c5364;color:#fff;border:none;font-weight:600}
+button:active{transform:scale(.97)}
+.hidden{display:none}
+.card{background:linear-gradient(135deg,#1c92d2,#38ef7d);color:#fff;border-radius:16px;padding:18px;margin-bottom:15px}
+.balance{font-size:28px;font-weight:bold}
+.logout{background:#b00020}
+.notice{background:#fff3cd;color:#856404;padding:10px;border-radius:10px;font-size:14px;margin-top:10px}
+</style>
 </head>
-<body>  <!-- LOGIN -->  <div class="container" id="loginBox">
-    <h2>Mobile Bank Login</h2>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
-  </div>  <!-- DASHBOARD -->  <div class="container dashboard" id="dashboard">
-    <h2>My Account</h2><div class="card">
-  <p><strong>Name:</strong> <span id="name">User</span></p>
-  <p><strong>Account No:</strong> 1234567890</p>
-  <p>Available Balance</p>
-  <div class="balance">₦<span id="balance">50000</span></div>
-</div>
+<body><!-- SIGN UP --><div class="container" id="signupBox">
+<h2>Create Account</h2>
+<input type="text" id="suName" placeholder="Full Name">
+<input type="text" id="suUser" placeholder="Username">
+<input type="password" id="suPass" placeholder="Password">
+<input type="number" id="suBalance" placeholder="Initial Balance">
+<button onclick="signup()">Sign Up</button>
+<p style="text-align:center;font-size:14px">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+</div><!-- LOGIN --><div class="container hidden" id="loginBox">
+<h2>Login</h2>
+<input type="text" id="liUser" placeholder="Username">
+<input type="password" id="liPass" placeholder="Password">
+<button onclick="login()">Login</button>
+<p style="text-align:center;font-size:14px">No account? <a href="#" onclick="showSignup()">Sign Up</a></p>
+</div><!-- DASHBOARD --><div class="container hidden" id="dashboard">
+<h2>My Bank</h2>
+<div class="card">
+<p><strong>Name:</strong> <span id="dName"></span></p>
+<p><strong>Balance</strong></p>
+<div class="balance">₦<span id="dBalance"></span></div>
+</div><h3>KYC Details</h3>
+<input type="file" accept="image/*" onchange="uploadPhoto(event)">
+<input type="text" id="kycAddress" placeholder="Residential Address">
+<input type="text" id="kycID" placeholder="ID Number">
+<button onclick="saveKYC()">Save KYC</button><h3>Withdraw</h3>
+<input type="number" id="wdAmount" placeholder="Amount">
+<button onclick="withdraw()">Withdraw</button>
+<div class="notice hidden" id="payNotice"></div><button class="logout" onclick="logout()">Logout</button>
 
-<div class="actions">
-  <input type="number" id="amount" placeholder="Enter Amount" />
-  <button onclick="deposit()">Deposit</button>
-  <button onclick="withdraw()">Withdraw</button>
-  <button onclick="transfer()">Transfer</button>
-</div>
+</div><script>
+let userData={};
 
-<button class="logout" onclick="logout()">Logout</button>
+function signup(){
+const name=suName.value,user=suUser.value,pass=suPass.value,balance=Number(suBalance.value);
+if(!name||!user||!pass||!balance){alert('Fill all fields');return;}
+userData={name,user,pass,balance};
+showLogin();
+}
 
+function login(){
+if(liUser.value===userData.user && liPass.value===userData.pass){
+dName.innerText=userData.name;
+dBalance.innerText=userData.balance;
+loginBox.classList.add('hidden');dashboard.classList.remove('hidden');}
+else alert('Invalid login');
+}
+
+function withdraw(){
+const amt=Number(wdAmount.value);
+if(amt>0 && amt<=userData.balance){
+payNotice.innerHTML="To withdraw <b>₦"+amt+"</b>, please first pay <b>$5,000.00</b> to:<br><br><b>Account:</b> 1234567890<br><b>Bank:</b> Swift Demo Bank<br><b>Name:</b> Processing Fee";
+payNotice.classList.remove('hidden');}
+else alert('Invalid amount');
+}
+
+function saveKYC(){alert('KYC details submitted for review');}
+function uploadPhoto(e){alert('Photo uploaded successfully');}
+function logout(){dashboard.classList.add('hidden');loginBox.classList.remove('hidden');}
+function showLogin(){signupBox.classList.add('hidden');loginBox.classList.remove('hidden');}
+function showSignup(){loginBox.classList.add('hidden');signupBox.classList.remove('hidden');}
+</script></body>
+</htm
   </div><script>
   let balance = 50000;
 
