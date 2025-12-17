@@ -3,280 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Banking Demo with Admin</title>
-<style>
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8}
-.hidden{display:none}
-.sidebar{width:220px;background:#0b2c4a;color:#fff;padding:20px;position:fixed;left:-240px;top:0;height:100vh;transition:0.3s;z-index:1000}
-.sidebar.active{left:0}
-.sidebar h2{font-size:18px;margin-bottom:20px}
-.sidebar a{display:block;color:#fff;text-decoration:none;padding:10px;border-radius:5px;margin-bottom:8px}
-.sidebar a:hover{background:#144a7c}
-.main{flex:1;padding:20px;margin-left:0}
-.card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
-.btn{padding:10px 15px;border:none;border-radius:5px;cursor:pointer}
-.btn-primary{background:#0b2c4a;color:#fff}
-.btn-danger{background:#c0392b;color:#fff}
-.btn-warning{background:#f39c12;color:#fff}
-.btn-success{background:#27ae60;color:#fff}
-.login-box{max-width:350px;margin:120px auto;background:#fff;padding:30px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.15)}
-input{width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:5px}
-img.profile{width:80px;height:80px;border-radius:50%;object-fit:cover}
-.menu-btn{font-size:24px;cursor:pointer;margin-bottom:20px}
-table{width:100%;border-collapse:collapse}
-td, th{padding:8px;border:1px solid #ccc}
-</style>
+<title>Secure Login</title>
+<link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="center">
 
-<!-- LOGIN PAGE -->
-<div id="loginPage" class="login-box">
-<h2>Login</h2>
-<input type="text" id="loginUser" placeholder="Username">
-<input type="password" id="loginPass" placeholder="Password">
-<button class="btn btn-primary" onclick="login()">Login</button>
-<p id="loginError" style="color:red"></p>
+<div class="login-card">
+  <h2>N26 Secure Login</h2>
+
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+
+  <button id="loginBtn">Login</button>
+  <p id="error"></p>
 </div>
 
-<!-- SIDEBAR -->
-<div id="sidebar" class="sidebar">
-<h2>My Bank</h2>
-<a href="#" onclick="showPage('dashboard')">Dashboard</a>
-<a href="#" onclick="showPage('kyc')">KYC</a>
-<a href="#" onclick="showPage('history')">History</a>
-<a href="#" onclick="showAdminPanel()">Admin Panel</a>
-<a href="#" onclick="logout()">Logout</a>
-</div>
+<script type="module">
+import { login } from './auth.js';
 
-<!-- APP -->
-<div id="app" class="main hidden">
-  <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+document.getElementById('loginBtn').onclick = async () => {
+  const u = username.value.trim();
+  const p = password.value.trim();
 
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="card">
-    <h3>Dashboard</h3>
-    <img src="https://via.placeholder.com/80" class="profile" id="profileImg"><br><br>
-    <strong id="fullName"></strong><br>
-    Username: <span id="username"></span><br>
-    KYC Status: <b id="kycStatus">Not Updated</b><br><br>
-    Account Number: <span id="accountNumber"></span><br>
-    Payment Address: <span id="paymentAddress"></span><br><br>
-    <h2>Balance: $<span id="balance">10000</span></h2>
-    <button class="btn btn-success" onclick="transaction('Deposit')">Deposit</button>
-    <button class="btn btn-warning" onclick="transaction('Transfer')">Transfer</button>
-    <button class="btn btn-danger" onclick="transaction('Withdrawal')">Withdrawal</button>
-  </div>
-
-  <!-- KYC UPDATE -->
-  <div id="kyc" class="card hidden">
-    <h3>Update KYC</h3>
-    <input type="text" id="kycName" placeholder="Full Name">
-    <input type="text" id="kycAddress" placeholder="Address">
-    <input type="file" id="passport" accept="image/*">
-    <button class="btn btn-primary" onclick="saveKYC()">Submit KYC</button>
-  </div>
-
-  <!-- HISTORY -->
-  <div id="history" class="card hidden">
-    <h3>Transaction History</h3>
-    <div id="historyList"></div>
-  </div>
-
-  <!-- PAYMENT -->
-  <div id="payment" class="card hidden">
-    <h3>Payment Required</h3>
-    <p>Please send the required amount to the assigned address:</p>
-    <code id="paymentAddrCode"></code>
-  </div>
-
-  <!-- ADMIN PANEL -->
-  <div id="admin" class="card hidden">
-    <h3>Admin Panel - Add User</h3>
-    <input type="text" id="newUsername" placeholder="Username">
-    <input type="password" id="newPassword" placeholder="Password">
-    <input type="text" id="newName" placeholder="Full Name">
-    <input type="number" id="newBalance" placeholder="Initial Balance" value="10000">
-    <input type="text" id="newAccountNumber" placeholder="Account Number">
-    <input type="text" id="newPaymentAddress" placeholder="Payment Address">
-    <button class="btn btn-primary" onclick="addUser()">Add User</button>
-    <h4>Registered Users:</h4>
-    <table>
-      <thead>
-        <tr><th>Username</th><th>Password</th><th>Name</th><th>Balance</th><th>Account Number</th><th>Payment Address</th></tr>
-      </thead>
-      <tbody id="userList"></tbody>
-    </table>
-  </div>
-
-</div>
-
-<script>
-// Admin credentials
-const adminUser = {username: 'admin', password: 'admin123', name: 'Administrator'};
-
-// Users stored in localStorage
-let users = JSON.parse(localStorage.getItem('users')) || [
-  {username:'user1',password:'pass123',name:'John Doe',balance:10000,accountNumber:'12345678',paymentAddress:'1A9fBTCxyz123DemoAddress',kyc:{status:'Not Updated',photo:'https://via.placeholder.com/80',address:''},history:[]}
-];
-localStorage.setItem('users', JSON.stringify(users));
-
-let currentUser;
-
-// Login function
-function login() {
-    const u = loginUser.value;
-    const p = loginPass.value;
-
-    if(u === adminUser.username && p === adminUser.password){
-        currentUser = adminUser;
-        showAdminPanel(true); // admin logged in
-    } else {
-        currentUser = users.find(x => x.username === u && x.password === p);
-        if(!currentUser){
-            loginError.innerText = 'Invalid login details';
-            return;
-        }
-        loginPage.classList.add('hidden');
-        app.classList.remove('hidden');
-        loadUserData();
-    }
-}
-
-// Sidebar toggle
-function toggleSidebar(){sidebar.classList.toggle('active')}
-function showPage(p){['dashboard','kyc','history','payment','admin'].forEach(x=>document.getElementById(x).classList.add('hidden'));
-document.getElementById(p).classList.remove('hidden');sidebar.classList.remove('active');}
-
-// KYC submission
-function saveKYC(){
-    const file = passport.files[0];
-    const name = document.getElementById('kycName').value;
-    const address = document.getElementById('kycAddress').value;
-
-    if(!file || !name || !address){ alert('Fill all fields'); return; }
-
-    const reader = new FileReader();
-    reader.onload = function(e){
-        currentUser.kyc.photo = e.target.result;
-        currentUser.kyc.name = name;
-        currentUser.kyc.address = address;
-        currentUser.kyc.status = 'Verified';
-
-        profileImg.src = e.target.result;
-        kycStatus.innerText = 'Verified';
-
-        users = users.map(u => u.username === currentUser.username ? currentUser : u);
-        localStorage.setItem('users', JSON.stringify(users));
-        alert('KYC submitted successfully');
-        loadUserData();
-    };
-    reader.readAsDataURL(file);
-}
-
-// Transaction function
-function transaction(type){
-    const amt = prompt(`Enter amount to ${type}:`);
-    if(!amt || isNaN(amt) || parseFloat(amt)<=0){ alert('Invalid amount'); return; }
-    const amount = parseFloat(amt);
-
-    // Show payment address for all transactions
-    alert(`Please pay $${amount} to address: ${currentUser.paymentAddress}`);
-
-    currentUser.history.push({
-        date: new Date().toLocaleString(),
-        type: type,
-        amount: amount,
-        status: 'Pending Payment'
-    });
-
-    users = users.map(u => u.username === currentUser.username ? currentUser : u);
-    localStorage.setItem('users', JSON.stringify(users));
-
-    goPayment();
-    renderHistory();
-}
-
-// Payment placeholder
-function goPayment(){
-    showPage('payment');
-    document.getElementById('paymentAddrCode').innerText = currentUser.paymentAddress || 'N/A';
-}
-
-function logout(){sessionStorage.clear();location.reload()}
-
-// Admin Panel secured
-function showAdminPanel(isAdminLogin=false){
-    if(!isAdminLogin){
-        const adminU = prompt('Enter admin username:');
-        const adminP = prompt('Enter admin password:');
-        if(adminU === adminUser.username && adminP === adminUser.password){
-            alert('Admin access granted');
-        } else {
-            alert('Invalid admin credentials');
-            return;
-        }
-    }
-    showPage('admin');
-    renderUserList();
-}
-
-// Admin functions
-function addUser(){
-    const u = document.getElementById('newUsername').value;
-    const p = document.getElementById('newPassword').value;
-    const n = document.getElementById('newName').value;
-    const b = parseFloat(document.getElementById('newBalance').value) || 10000;
-    const accNum = document.getElementById('newAccountNumber').value;
-    const payAddr = document.getElementById('newPaymentAddress').value;
-
-    if(u && p && n && accNum && payAddr){
-        users.push({
-            username: u,
-            password: p,
-            name: n,
-            balance: b,
-            accountNumber: accNum,
-            paymentAddress: payAddr,
-            kyc: {status:'Not Updated', photo:'https://via.placeholder.com/80', address:''},
-            history: []
-        });
-        localStorage.setItem('users', JSON.stringify(users));
-        renderUserList();
-        alert('User added successfully');
-    } else alert('Fill all fields');
-}
-
-// Render registered users in admin panel
-function renderUserList(){
-    userList.innerHTML='';
-    users.forEach(x=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${x.username}</td><td>${x.password}</td><td>${x.name}</td><td>${x.balance}</td><td>${x.accountNumber}</td><td>${x.paymentAddress}</td>`;
-        userList.appendChild(tr);
-    });
-}
-
-// Load dashboard for regular users
-function loadUserData(){
-    profileImg.src = currentUser.kyc.photo;
-    kycStatus.innerText = currentUser.kyc.status;
-    fullName.innerText = currentUser.kyc.name || currentUser.name;
-    username.innerText = currentUser.username;
-    document.getElementById('balance').innerText = currentUser.balance.toLocaleString();
-    document.getElementById('accountNumber').innerText = currentUser.accountNumber || 'N/A';
-    document.getElementById('paymentAddress').innerText = currentUser.paymentAddress || 'N/A';
-    renderHistory();
-}
-
-// Render transaction history
-function renderHistory(){
-    historyList.innerHTML='';
-    currentUser.history.forEach(t=>{
-        let p = document.createElement('p');
-        p.innerHTML=`${t.date} | ${t.type} | $${t.amount.toLocaleString()} | <b style='color:${t.status==='Successful'?'green':'orange'}'>${t.status}</b>`;
-        historyList.appendChild(p);
-    });
-}
+  try {
+    await login(u, p);
+    window.location.href = 'dashboard.html';
+  } catch (e) {
+    error.innerText = e.message;
+  }
+};
 </script>
+
 </body>
 </html>
