@@ -1,1 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="center">
 
+<div class="login-card">
+  <h2>Admin Login</h2>
+
+  <input id="adminUser" placeholder="Username">
+  <input id="adminPass" type="password" placeholder="Password">
+  <button id="adminLogin">Login</button>
+  <p id="err"></p>
+</div>
+
+<script type="module">
+import { auth, db } from './app.js';
+import { signInWithEmailAndPassword } 
+from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+import { doc, getDoc } 
+from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+
+adminLogin.onclick = async () => {
+  try{
+    const email = `${adminUser.value}@n26bank.app`;
+    const res = await signInWithEmailAndPassword(auth,email,adminPass.value);
+    const snap = await getDoc(doc(db,'users',res.user.uid));
+
+    if(snap.data().role !== 'admin') throw 'Not admin';
+
+    location.href='admin-panel.html';
+  }catch{
+    err.innerText='Access denied';
+  }
+};
+</script>
+
+</body>
+</html>
