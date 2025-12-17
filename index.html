@@ -1,14 +1,14 @@
-
 <!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mobile Banking – Sign Up & Login</title>
+<title>Mobile Banking – Sign Up, Login & KYC</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Segoe UI,Tahoma,sans-serif;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:15px}
-.container{width:100%;max-width:380px;background:#fff;border-radius:18px;padding:20px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+.container{width:100%;max-width:390px;background:#fff;border-radius:18px;padding:20px;box-shadow:0 12px 30px rgba(0,0,0,.25)}
 h2{text-align:center;color:#2c5364;margin-bottom:15px}
+h3{margin:12px 0;color:#2c5364}
 input,button{width:100%;padding:14px;margin:8px 0;border-radius:12px;border:1px solid #ddd;font-size:15px}
 button{background:#2c5364;color:#fff;border:none;font-weight:600}
 button:active{transform:scale(.97)}
@@ -17,6 +17,18 @@ button:active{transform:scale(.97)}
 .balance{font-size:28px;font-weight:bold}
 .logout{background:#b00020}
 .notice{background:#fff3cd;color:#856404;padding:10px;border-radius:10px;font-size:14px;margin-top:10px}
+.profile{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:10px
+}
+.profile img{
+  width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #fff
+}
+.small{font-size:14px;color:#555}
+.link{text-align:center;font-size:14px;margin-top:8px}
+.link a{color:#2c5364;text-decoration:none;font-weight:600}
 </style>
 </head>
 <body><!-- SIGN UP --><div class="container" id="signupBox">
@@ -24,59 +36,91 @@ button:active{transform:scale(.97)}
 <input type="text" id="suName" placeholder="Full Name">
 <input type="text" id="suUser" placeholder="Username">
 <input type="password" id="suPass" placeholder="Password">
-<input type="number" id="suBalance" placeholder="Initial Balance">
 <button onclick="signup()">Sign Up</button>
-<p style="text-align:center;font-size:14px">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+<div class="link">Already have an account? <a href="#" onclick="showLogin()">Login</a></div>
 </div><!-- LOGIN --><div class="container hidden" id="loginBox">
 <h2>Login</h2>
 <input type="text" id="liUser" placeholder="Username">
 <input type="password" id="liPass" placeholder="Password">
 <button onclick="login()">Login</button>
-<p style="text-align:center;font-size:14px">No account? <a href="#" onclick="showSignup()">Sign Up</a></p>
+<div class="link">No account? <a href="#" onclick="showSignup()">Sign Up</a></div>
 </div><!-- DASHBOARD --><div class="container hidden" id="dashboard">
-<h2>My Bank</h2>
-<div class="card">
-<p><strong>Name:</strong> <span id="dName"></span></p>
-<p><strong>Balance</strong></p>
-<div class="balance">₦<span id="dBalance"></span></div>
-</div><h3>KYC Details</h3>
-<input type="file" accept="image/*" onchange="uploadPhoto(event)">
-<input type="text" id="kycAddress" placeholder="Residential Address">
-<input type="text" id="kycID" placeholder="ID Number">
-<button onclick="saveKYC()">Save KYC</button><h3>Withdraw</h3>
+<h2>My Bank</h2><div class="card">
+  <div class="profile">
+    <img id="profileImg" src="https://via.placeholder.com/70" />
+    <div>
+      <strong id="dName"></strong><br>
+      <span class="small" id="dUser"></span>
+    </div>
+  </div>
+  <p>Account Balance</p>
+  <div class="balance">$<span id="dBalance"></span></div>
+</div><button onclick="openKYC()">Update KYC</button>
+
+<h3>Withdraw</h3>
 <input type="number" id="wdAmount" placeholder="Amount">
 <button onclick="withdraw()">Withdraw</button>
 <div class="notice hidden" id="payNotice"></div><button class="logout" onclick="logout()">Logout</button>
 
+</div><!-- KYC PAGE --><div class="container hidden" id="kycPage">
+<h2>KYC Update</h2>
+<input type="file" accept="image/*" onchange="uploadPhoto(event)">
+<input type="text" id="kycAddress" placeholder="Residential Address">
+<input type="text" id="kycID" placeholder="ID / Passport Number">
+<button onclick="saveKYC()">Save KYC</button>
+<button class="logout" onclick="backToDash()">Back</button>
 </div><script>
-let userData={};
+let userData={ balance:10000 };
 
 function signup(){
-const name=suName.value,user=suUser.value,pass=suPass.value,balance=Number(suBalance.value);
-if(!name||!user||!pass||!balance){alert('Fill all fields');return;}
-userData={name,user,pass,balance};
-showLogin();
+  if(!suName.value||!suUser.value||!suPass.value){alert('Fill all fields');return;}
+  userData.name=suName.value;
+  userData.user=suUser.value;
+  userData.pass=suPass.value;
+  showLogin();
 }
 
 function login(){
-if(liUser.value===userData.user && liPass.value===userData.pass){
-dName.innerText=userData.name;
-dBalance.innerText=userData.balance;
-loginBox.classList.add('hidden');dashboard.classList.remove('hidden');}
-else alert('Invalid login');
+  if(liUser.value===userData.user && liPass.value===userData.pass){
+    dName.innerText=userData.name;
+    dUser.innerText='@'+userData.user;
+    dBalance.innerText=userData.balance.toLocaleString();
+    loginBox.classList.add('hidden');
+    dashboard.classList.remove('hidden');
+  } else alert('Invalid login details');
+}
+
+function openKYC(){
+  dashboard.classList.add('hidden');
+  kycPage.classList.remove('hidden');
+}
+
+function uploadPhoto(e){
+  const file=e.target.files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=function(){profileImg.src=reader.result;};
+    reader.readAsDataURL(file);
+  }
+}
+
+function saveKYC(){
+  userData.address=kycAddress.value;
+  userData.id=kycID.value;
+  alert('KYC details saved successfully');
+  backToDash();
 }
 
 function withdraw(){
-const amt=Number(wdAmount.value);
-if(amt>0 && amt<=userData.balance){
-payNotice.innerHTML="To withdraw <b>₦"+amt+"</b>, please first pay <b>₦500</b> to:<br><br><b>Account:</b> 1234567890<br><b>Bank:</b> Swift Demo Bank<br><b>Name:</b> Processing Fee";
-payNotice.classList.remove('hidden');}
-else alert('Invalid amount');
+  const amt=Number(wdAmount.value);
+  if(amt>0 && amt<=userData.balance){
+    payNotice.innerHTML=`To withdraw <b>$${amt.toLocaleString()}</b>, please first pay a <b>$50 processing fee</b> to:<br><br><b>Account:</b> 9876543210<br><b>Bank:</b> Swift Demo Bank<br><b>Name:</b> Withdrawal Processing`;
+    payNotice.classList.remove('hidden');
+  } else alert('Invalid amount');
 }
 
-function saveKYC(){alert('KYC details submitted for review');}
-function uploadPhoto(e){alert('Photo uploaded successfully');}
 function logout(){dashboard.classList.add('hidden');loginBox.classList.remove('hidden');}
+function backToDash(){kycPage.classList.add('hidden');dashboard.classList.remove('hidden');}
 function showLogin(){signupBox.classList.add('hidden');loginBox.classList.remove('hidden');}
 function showSignup(){loginBox.classList.add('hidden');signupBox.classList.remove('hidden');}
 </script></body>
