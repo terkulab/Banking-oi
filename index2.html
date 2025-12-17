@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo Banking App</title>
+<style>
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8}
+.hidden{display:none}
+.container{display:flex;min-height:100vh}
+.sidebar{width:220px;background:#0b2c4a;color:#fff;padding:20px;position:fixed;left:-240px;top:0;height:100vh;transition:0.3s;z-index:1000}
+.sidebar.active{left:0}
+.sidebar h2{font-size:18px;margin-bottom:20px}
+.sidebar a{display:block;color:#fff;text-decoration:none;padding:10px;border-radius:5px;margin-bottom:8px}
+.sidebar a:hover{background:#144a7c}
+.main{flex:1;padding:20px;margin-left:0}
+.card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.btn{padding:10px 15px;border:none;border-radius:5px;cursor:pointer}
+.btn-primary{background:#0b2c4a;color:#fff}
+.btn-danger{background:#c0392b;color:#fff}
+.btn-warning{background:#f39c12;color:#fff}
+.btn-success{background:#27ae60;color:#fff}
+.login-box{max-width:350px;margin:120px auto;background:#fff;padding:30px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.15)}
+input{width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:5px}
+img.profile{width:80px;height:80px;border-radius:50%;object-fit:cover}
+.menu-btn{font-size:24px;cursor:pointer;margin-bottom:20px}
+</style>
+</head>
+<body><!-- LOGIN PAGE (LOGIN ONLY) --><div id="loginPage" class="login-box">
+<h2>Login</h2>
+<input type="text" id="loginUser" placeholder="Username">
+<input type="password" id="loginPass" placeholder="Password">
+<button class="btn btn-primary" onclick="login()">Login</button>
+<p id="loginError" style="color:red"></p>
+</div><!-- SIDEBAR --><div id="sidebar" class="sidebar">
+<h2>My Bank</h2>
+<a href="#" onclick="showPage('dashboard')">Dashboard</a>
+<a href="#" onclick="showPage('kyc')">KYC</a>
+<a href="#" onclick="showPage('history')">History</a>
+<a href="#" onclick="logout()">Logout</a>
+</div><!-- APP --><div id="app" class="main hidden">
+  <div class="menu-btn" onclick="toggleSidebar()">☰</div>  <!-- DASHBOARD -->  <div id="dashboard" class="card">
+    <h3>Dashboard</h3>
+    <img src="https://via.placeholder.com/80" class="profile" id="profileImg"><br><br>
+    <strong id="fullName"></strong><br>
+    Username: <span id="username"></span><br>
+    KYC Status: <b id="kycStatus">Not Updated</b><br><br>
+    <h2>Balance: $10,000</h2>
+    <button class="btn btn-success">Deposit</button>
+    <button class="btn btn-warning" onclick="goPayment()">Transfer</button>
+    <button class="btn btn-danger" onclick="goPayment()">Withdrawal</button>
+  </div>  <!-- KYC UPDATE -->  <div id="kyc" class="card hidden">
+    <h3>Update KYC</h3>
+    <input type="text" id="kycName" placeholder="Full Name">
+    <input type="text" placeholder="Address">
+    <input type="file" id="passport" accept="image/*">
+    <button class="btn btn-primary" onclick="saveKYC()">Submit KYC</button>
+  </div>  <!-- HISTORY -->  <div id="history" class="card hidden">
+    <h3>Transaction History</h3>
+    <p>2025-01-12 | Withdrawal | $5,000.00 | <b style="color:green">Successful</b></p>
+  </div>  <!-- PAYMENT -->  <div id="payment" class="card hidden">
+    <h3>Processing Fee Required</h3>
+    <p>Fee: <b>$50</b></p>
+    <p>Pay to address:</p>
+    <code>1A9fBTCxyz123DemoAddress</code>
+  </div>
+</div><script>
+// ADMIN USER
+const user={username:'user1',password:'pass123',name:'John Doe'};
+
+function login(){
+  const u=loginUser.value;
+  const p=loginPass.value;
+  if(u===user.username && p===user.password){
+    sessionStorage.setItem('loggedIn','yes');
+    loginPage.classList.add('hidden');
+    app.classList.remove('hidden');
+    fullName.innerText=user.name;
+    username.innerText=user.username;
+  }else loginError.innerText='Invalid login details';
+}
+
+function toggleSidebar(){sidebar.classList.toggle('active')}
+
+function showPage(p){
+  ['dashboard','kyc','history','payment'].forEach(x=>document.getElementById(x).classList.add('hidden'));
+  document.getElementById(p).classList.remove('hidden');
+  sidebar.classList.remove('active');
+}
+
+function saveKYC(){
+  const file=passport.files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=e=>profileImg.src=e.target.result;
+    reader.readAsDataURL(file);
+    kycStatus.innerText='Verified';
+    alert('KYC submitted successfully');
+  }
+}
+
+function goPayment(){showPage('payment')}
+function logout(){sessionStorage.clear();location.reload()}
+</script></body>
+</html>
