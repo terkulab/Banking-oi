@@ -1,12 +1,12 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Secure Multiuser Banking Demo</title>
+<title>Banking Demo with Admin</title>
 <style>
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8}
 .hidden{display:none}
-.container{display:flex;min-height:100vh}
 .sidebar{width:220px;background:#0b2c4a;color:#fff;padding:20px;position:fixed;left:-240px;top:0;height:100vh;transition:0.3s;z-index:1000}
 .sidebar.active{left:0}
 .sidebar h2{font-size:18px;margin-bottom:20px}
@@ -27,122 +27,134 @@ table{width:100%;border-collapse:collapse}
 td, th{padding:8px;border:1px solid #ccc}
 </style>
 </head>
-<body><!-- LOGIN PAGE --><div id="loginPage" class="login-box">
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" class="login-box">
 <h2>Login</h2>
 <input type="text" id="loginUser" placeholder="Username">
 <input type="password" id="loginPass" placeholder="Password">
 <button class="btn btn-primary" onclick="login()">Login</button>
 <p id="loginError" style="color:red"></p>
-</div><!-- SIDEBAR --><div id="sidebar" class="sidebar">
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar" class="sidebar">
 <h2>My Bank</h2>
 <a href="#" onclick="showPage('dashboard')">Dashboard</a>
 <a href="#" onclick="showPage('kyc')">KYC</a>
 <a href="#" onclick="showPage('history')">History</a>
-<a href="#" id="adminLink" style="display:none" onclick="showPage('admin')">Admin Panel</a>
+<a href="#" onclick="showAdminPanel()">Admin Panel</a>
 <a href="#" onclick="logout()">Logout</a>
-</div><!-- APP --><div id="app" class="main hidden">
-  <div class="menu-btn" onclick="toggleSidebar()">☰</div>  <!-- DASHBOARD -->  <div id="dashboard" class="card">
+</div>
+
+<!-- APP -->
+<div id="app" class="main hidden">
+  <div class="menu-btn" onclick="toggleSidebar()">☰</div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="card">
     <h3>Dashboard</h3>
     <img src="https://via.placeholder.com/80" class="profile" id="profileImg"><br><br>
     <strong id="fullName"></strong><br>
     Username: <span id="username"></span><br>
     KYC Status: <b id="kycStatus">Not Updated</b><br><br>
+    Account Number: <span id="accountNumber"></span><br>
+    Payment Address: <span id="paymentAddress"></span><br><br>
     <h2>Balance: $<span id="balance">10000</span></h2>
     <button class="btn btn-success">Deposit</button>
     <button class="btn btn-warning" onclick="goPayment()">Transfer</button>
     <button class="btn btn-danger" onclick="goPayment()">Withdrawal</button>
-  </div>  <!-- KYC UPDATE -->  <div id="kyc" class="card hidden">
+  </div>
+
+  <!-- KYC UPDATE -->
+  <div id="kyc" class="card hidden">
     <h3>Update KYC</h3>
     <input type="text" id="kycName" placeholder="Full Name">
     <input type="text" id="kycAddress" placeholder="Address">
     <input type="file" id="passport" accept="image/*">
     <button class="btn btn-primary" onclick="saveKYC()">Submit KYC</button>
-  </div>  <!-- HISTORY -->  <div id="history" class="card hidden">
+  </div>
+
+  <!-- HISTORY -->
+  <div id="history" class="card hidden">
     <h3>Transaction History</h3>
     <div id="historyList"></div>
-  </div>  <!-- PAYMENT -->  <div id="payment" class="card hidden">
+  </div>
+
+  <!-- PAYMENT -->
+  <div id="payment" class="card hidden">
     <h3>Processing Fee Required</h3>
     <p>Fee: <b>$50</b></p>
     <p>Pay to address:</p>
-    <code>1A9fBTCxyz123DemoAddress</code>
-  </div>  <!-- ADMIN PANEL -->  <div id="admin" class="card hidden">
+    <code id="paymentAddrCode"></code>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div id="admin" class="card hidden">
     <h3>Admin Panel - Add User</h3>
     <input type="text" id="newUsername" placeholder="Username">
     <input type="password" id="newPassword" placeholder="Password">
     <input type="text" id="newName" placeholder="Full Name">
+    <input type="number" id="newBalance" placeholder="Initial Balance" value="10000">
+    <input type="text" id="newAccountNumber" placeholder="Account Number">
+    <input type="text" id="newPaymentAddress" placeholder="Payment Address">
     <button class="btn btn-primary" onclick="addUser()">Add User</button>
     <h4>Registered Users:</h4>
     <table>
       <thead>
-        <tr><th>Username</th><th>Password</th><th>Name</th></tr>
+        <tr><th>Username</th><th>Password</th><th>Name</th><th>Balance</th><th>Account Number</th><th>Payment Address</th></tr>
       </thead>
       <tbody id="userList"></tbody>
     </table>
-  </div></div><script>
+  </div>
+
+</div>
+
+<script>
 // Admin credentials
 const adminUser = {username: 'admin', password: 'admin123', name: 'Administrator'};
 
 // Users stored in localStorage
 let users = JSON.parse(localStorage.getItem('users')) || [
-  {username:'user1',password:'pass123',name:'John Doe',balance:10000,kyc:{status:'Not Updated',photo:'https://via.placeholder.com/80',address:''},history:[]}
+  {username:'user1',password:'pass123',name:'John Doe',balance:10000,accountNumber:'12345678',paymentAddress:'1A9fBTCxyz123DemoAddress',kyc:{status:'Not Updated',photo:'https://via.placeholder.com/80',address:''},history:[]}
 ];
 localStorage.setItem('users', JSON.stringify(users));
 
 let currentUser;
-let isAdmin = false;
 
+// Login function
 function login() {
     const u = loginUser.value;
     const p = loginPass.value;
 
     if(u === adminUser.username && p === adminUser.password){
-        isAdmin = true;
         currentUser = adminUser;
+        showAdminPanel(true); // admin logged in
     } else {
         currentUser = users.find(x => x.username === u && x.password === p);
         if(!currentUser){
             loginError.innerText = 'Invalid login details';
             return;
         }
-    }
-
-    sessionStorage.setItem('loggedIn', u);
-    loginPage.classList.add('hidden');
-    app.classList.remove('hidden');
-
-    fullName.innerText = currentUser.name;
-    username.innerText = currentUser.username;
-
-    document.getElementById('adminLink').style.display = isAdmin ? 'block' : 'none';
-
-    loadUserData();
-}
-
-function loadUserData(){
-    if(!isAdmin){
-        profileImg.src = currentUser.kyc.photo;
-        kycStatus.innerText = currentUser.kyc.status;
-        document.getElementById('balance').innerText = currentUser.balance.toLocaleString();
-        renderHistory();
-    } else {
-        renderUserList();
+        loginPage.classList.add('hidden');
+        app.classList.remove('hidden');
+        loadUserData();
     }
 }
 
+// Sidebar toggle
 function toggleSidebar(){sidebar.classList.toggle('active')}
 function showPage(p){['dashboard','kyc','history','payment','admin'].forEach(x=>document.getElementById(x).classList.add('hidden'));
-document.getElementById(p).classList.remove('hidden');
-sidebar.classList.remove('active');}
+document.getElementById(p).classList.remove('hidden');sidebar.classList.remove('active');}
 
+// KYC submission
 function saveKYC(){
     const file = passport.files[0];
     const name = document.getElementById('kycName').value;
     const address = document.getElementById('kycAddress').value;
 
-    if(!file || !name || !address){
-        alert('Please fill all KYC fields and select passport');
-        return;
-    }
+    if(!file || !name || !address){ alert('Fill all fields'); return; }
 
     const reader = new FileReader();
     reader.onload = function(e){
@@ -154,38 +166,87 @@ function saveKYC(){
         profileImg.src = e.target.result;
         kycStatus.innerText = 'Verified';
 
+        // Save permanently in localStorage
+        users = users.map(u => u.username === currentUser.username ? currentUser : u);
         localStorage.setItem('users', JSON.stringify(users));
         alert('KYC submitted successfully');
+        loadUserData();
     };
     reader.readAsDataURL(file);
 }
 
-function goPayment(){showPage('payment')}
+// Payment placeholder
+function goPayment(){
+    showPage('payment');
+    document.getElementById('paymentAddrCode').innerText = currentUser.paymentAddress || 'N/A';
+}
 function logout(){sessionStorage.clear();location.reload()}
+
+// Admin Panel secured
+function showAdminPanel(isAdminLogin=false){
+    if(!isAdminLogin){
+        const adminU = prompt('Enter admin username:');
+        const adminP = prompt('Enter admin password:');
+        if(adminU === adminUser.username && adminP === adminUser.password){
+            alert('Admin access granted');
+        } else {
+            alert('Invalid admin credentials');
+            return;
+        }
+    }
+    showPage('admin');
+    renderUserList();
+}
 
 // Admin functions
 function addUser(){
     const u = document.getElementById('newUsername').value;
     const p = document.getElementById('newPassword').value;
     const n = document.getElementById('newName').value;
+    const b = parseFloat(document.getElementById('newBalance').value) || 10000;
+    const accNum = document.getElementById('newAccountNumber').value;
+    const payAddr = document.getElementById('newPaymentAddress').value;
 
-    if(u && p && n){
-        users.push({username:u,password:p,name:n,balance:10000,kyc:{status:'Not Updated',photo:'https://via.placeholder.com/80',address:''},history:[]});
+    if(u && p && n && accNum && payAddr){
+        users.push({
+            username: u,
+            password: p,
+            name: n,
+            balance: b,
+            accountNumber: accNum,
+            paymentAddress: payAddr,
+            kyc: {status:'Not Updated', photo:'https://via.placeholder.com/80', address:''},
+            history: []
+        });
         localStorage.setItem('users', JSON.stringify(users));
         renderUserList();
-        alert('User added');
+        alert('User added successfully');
     } else alert('Fill all fields');
 }
 
+// Render registered users in admin panel
 function renderUserList(){
     userList.innerHTML='';
     users.forEach(x=>{
         const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${x.username}</td><td>${x.password}</td><td>${x.name}</td>`;
+        tr.innerHTML=`<td>${x.username}</td><td>${x.password}</td><td>${x.name}</td><td>${x.balance}</td><td>${x.accountNumber}</td><td>${x.paymentAddress}</td>`;
         userList.appendChild(tr);
     });
 }
 
+// Load dashboard for regular users
+function loadUserData(){
+    profileImg.src = currentUser.kyc.photo;
+    kycStatus.innerText = currentUser.kyc.status;
+    fullName.innerText = currentUser.kyc.name || currentUser.name;
+    username.innerText = currentUser.username;
+    document.getElementById('balance').innerText = currentUser.balance.toLocaleString();
+    document.getElementById('accountNumber').innerText = currentUser.accountNumber || 'N/A';
+    document.getElementById('paymentAddress').innerText = currentUser.paymentAddress || 'N/A';
+    renderHistory();
+}
+
+// Render transaction history
 function renderHistory(){
     historyList.innerHTML='';
     currentUser.history.forEach(t=>{
@@ -194,5 +255,6 @@ function renderHistory(){
         historyList.appendChild(p);
     });
 }
-</script></body>
+</script>
+</body>
 </html>
