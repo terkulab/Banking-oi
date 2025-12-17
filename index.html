@@ -8,7 +8,6 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif;}
   body{background:#f0f2f5; min-height:100vh;}
-  .container{max-width:1200px;margin:auto;padding:20px;}
   
   /* LOGIN */
   #loginSection{display:flex;justify-content:center;align-items:center;height:100vh;}
@@ -28,6 +27,7 @@
   /* CARDS */
   .card{background:#fff;padding:20px;margin:10px 0;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.1);}
   .card h3{color:#0A2540;margin-bottom:12px;}
+  .flex button{margin-right:10px;}
   
   /* TABLE */
   table{width:100%;border-collapse:collapse;margin-top:10px;}
@@ -71,6 +71,7 @@
   </div>
 
   <div class="main-content" id="mainContent">
+
     <!-- USER DASHBOARD -->
     <div id="dashboardContent" class="card">
       <h3>User Dashboard</h3>
@@ -118,6 +119,7 @@
         <tbody id="usersTable"></tbody>
       </table>
     </div>
+
   </div>
 </section>
 
@@ -138,6 +140,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/fireba
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -146,11 +149,21 @@ const firebaseConfig = {
   messagingSenderId: "YOUR_SENDER_ID",
   appId: "YOUR_APP_ID"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser;
+
+// Hardcoded Admin
+const adminUser = {
+  email: "admin@bankapp.com",
+  password: "Admin1234!",
+  uid: "admin123",
+  name: "Admin User",
+  role: "admin"
+};
 
 // DOM Elements
 const loginSection = document.getElementById('loginSection');
@@ -194,10 +207,23 @@ const addUserBtn = document.getElementById('addUserBtn');
 const usersTable = document.getElementById('usersTable');
 
 // LOGIN
-loginBtn.onclick = async ()=>{
+loginBtn.onclick = async () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
-  if(!email || !password){ alert("Enter email & password"); return; }
+  if(!email||!password){ alert("Enter email & password"); return; }
+
+  // Admin check
+  if(email===adminUser.email && password===adminUser.password){
+    currentUser = adminUser;
+    loginSection.style.display="none";
+    dashboardSection.style.display="block";
+    adminContent.style.display="block";
+    dashboardContent.style.display="none";
+    loadUsers();
+    return;
+  }
+
+  // Normal user login
   try{
     const userCred = await signInWithEmailAndPassword(auth,email,password);
     const snap = await getDoc(doc(db,"users",userCred.user.uid));
@@ -206,13 +232,17 @@ loginBtn.onclick = async ()=>{
     currentUser = {uid:userCred.user.uid, ...data};
     loginSection.style.display="none";
     dashboardSection.style.display="block";
+
     if(data.role==="admin"){
       adminContent.style.display="block";
+      dashboardContent.style.display="none";
+      loadUsers();
     }else{
       dashboardContent.style.display="block";
+      adminContent.style.display="none";
       loadUserDashboard();
     }
-  }catch(e){ alert("Login failed: "+e.message); }
+  }catch(e){ alert("Login failed: "+e.message);}
 };
 
 // LOGOUT
@@ -228,17 +258,17 @@ dashboardBtn.onclick=()=>{dashboardContent.style.display="block"; kycContent.sty
 kycBtn.onclick=()=>{dashboardContent.style.display="none"; kycContent.style.display="block"; historyContent.style.display="none";}
 historyBtn.onclick=()=>{dashboardContent.style.display="none"; kycContent.style.display="none"; historyContent.style.display="block";}
 
-// USER DASHBOARD
+// DASHBOARD FUNCTIONS
 async function loadUserDashboard(){
   userNameEl.innerText=currentUser.name;
   userBalanceEl.innerText=currentUser.balance;
-  userAccountEl.innerText=currentUser.accountNumber || "-";
-  
+  userAccountEl.innerText=currentUser.accountNumber||"-";
+
   kycNameEl.innerText=currentUser.name;
   kycEmailEl.innerText=currentUser.email;
-  kycAccountEl.innerText=currentUser.accountNumber || "-";
-  kycStatusEl.innerText=currentUser.KYC || "Not uploaded";
-  
+  kycAccountEl.innerText=currentUser.accountNumber||"-";
+  kycStatusEl.innerText=currentUser.KYC||"Not uploaded";
+
   depositBtn.onclick=()=>{openModal("Deposit")};
   transferBtn.onclick=()=>{openModal("Transfer")};
   withdrawBtn.onclick=()=>{openModal("Withdraw")};
@@ -250,6 +280,7 @@ function openModal(type){
   modalAmount.value="";
   modalAddress.value="";
   modal.style.display="flex";
+
   modalConfirm.onclick = async ()=>{
     let amt = parseFloat(modalAmount.value);
     let addr = modalAddress.value;
@@ -304,6 +335,5 @@ async function loadUsers(){
 }
 
 </script>
-
 </body>
 </html>
