@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banking App</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif;}
+  body{background:#f0f2f5; min-height:100vh;}
+  .container{max-width:1200px;margin:auto;padding:20px;}
+  
+  /* LOGIN */
+  #loginSection{display:flex;justify-content:center;align-items:center;height:100vh;}
+  .login-box{background:#fff;padding:40px;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,0.15);width:100%;max-width:400px;text-align:center;}
+  .login-box input, .login-box button{width:100%;padding:12px;margin:12px 0;border-radius:8px;border:1px solid #ccc;}
+  .login-box button{background:#0A2540;color:#fff;font-weight:600;border:none;cursor:pointer;}
+  .login-box h2{color:#0A2540;margin-bottom:20px;}
+
+  /* DASHBOARD */
+  #dashboardSection{display:none;}
+  .sidebar{position:fixed;top:0;left:0;height:100%;width:250px;background:#0A2540;color:#fff;padding:20px;transition:all 0.3s ease;}
+  .sidebar h3{margin-bottom:20px;}
+  .sidebar button{width:100%;padding:12px;margin:6px 0;border:none;border-radius:8px;background:#1b3b70;color:#fff;cursor:pointer;}
+  .sidebar .close-btn{display:none;position:absolute;top:10px;right:10px;background:red;}
+  .main-content{margin-left:260px;padding:20px;transition:all 0.3s ease;}
+  
+  /* CARDS */
+  .card{background:#fff;padding:20px;margin:10px 0;border-radius:12px;box-shadow:0 8px 25px rgba(0,0,0,0.1);}
+  .card h3{color:#0A2540;margin-bottom:12px;}
+  
+  /* TABLE */
+  table{width:100%;border-collapse:collapse;margin-top:10px;}
+  th,td{padding:12px;border:1px solid #ccc;text-align:left;}
+  th{background:#0A2540;color:#fff;}
+  
+  /* MODAL */
+  .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;}
+  .modal-content{background:#fff;padding:30px;border-radius:12px;width:90%;max-width:400px;position:relative;}
+  .modal-content input, .modal-content button{width:100%;padding:12px;margin:10px 0;border-radius:8px;border:1px solid #ccc;}
+  .modal-content button{background:#0A2540;color:#fff;font-weight:600;border:none;cursor:pointer;}
+  .modal .close{position:absolute;top:10px;right:10px;background:red;color:#fff;padding:5px 10px;border:none;border-radius:50%;cursor:pointer;}
+  
+  @media(max-width:768px){
+    .sidebar{width:200px;position:fixed;left:-220px;}
+    .main-content{margin-left:0;}
+    .sidebar.active{left:0;}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SECTION -->
+<section id="loginSection">
+  <div class="login-box">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+  </div>
+</section>
+
+<!-- DASHBOARD SECTION -->
+<section id="dashboardSection">
+  <div class="sidebar" id="sidebar">
+    <h3>Menu</h3>
+    <button id="dashboardBtn">Dashboard</button>
+    <button id="kycBtn">KYC Info</button>
+    <button id="historyBtn">History</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
+
+  <div class="main-content" id="mainContent">
+    <!-- USER DASHBOARD -->
+    <div id="dashboardContent" class="card">
+      <h3>User Dashboard</h3>
+      <p><b>Name:</b> <span id="userName"></span></p>
+      <p><b>Balance:</b> $<span id="userBalance"></span></p>
+      <p><b>Account Number:</b> <span id="userAccount"></span></p>
+      <div class="flex">
+        <button id="depositBtn">Deposit</button>
+        <button id="transferBtn">Transfer</button>
+        <button id="withdrawBtn">Withdraw</button>
+      </div>
+    </div>
+
+    <!-- KYC INFO -->
+    <div id="kycContent" class="card" style="display:none;">
+      <h3>KYC Information</h3>
+      <p><b>Name:</b> <span id="kycName"></span></p>
+      <p><b>Email:</b> <span id="kycEmail"></span></p>
+      <p><b>Account Number:</b> <span id="kycAccount"></span></p>
+      <p><b>KYC Status:</b> <span id="kycStatus"></span></p>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="historyContent" class="card" style="display:none;">
+      <h3>Transaction History</h3>
+      <div id="historyList">No transactions yet</div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="adminContent" class="card" style="display:none;">
+      <h3>Admin Panel</h3>
+      <input type="text" id="addUserName" placeholder="Name">
+      <input type="email" id="addUserEmail" placeholder="Email">
+      <input type="password" id="addUserPass" placeholder="Password">
+      <input type="text" id="addUserAccount" placeholder="Account Number">
+      <input type="number" id="addUserBalance" placeholder="Initial Balance">
+      <input type="text" id="addUserAddress" placeholder="Payment Address">
+      <button id="addUserBtn">Add User</button>
+
+      <h3>Users List</h3>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Balance</th><th>Account</th><th>Action</th></tr>
+        </thead>
+        <tbody id="usersTable"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- MODALS -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="close" id="modalClose">X</button>
+    <h3 id="modalTitle">Action</h3>
+    <input type="number" id="modalAmount" placeholder="Enter amount">
+    <input type="text" id="modalAddress" placeholder="Payment Address (for Transfer/Withdrawal)">
+    <button id="modalConfirm">Confirm</button>
+  </div>
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser;
+
+// DOM Elements
+const loginSection = document.getElementById('loginSection');
+const dashboardSection = document.getElementById('dashboardSection');
+
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const loginBtn = document.getElementById('loginBtn');
+
+const dashboardContent = document.getElementById('dashboardContent');
+const kycContent = document.getElementById('kycContent');
+const historyContent = document.getElementById('historyContent');
+const adminContent = document.getElementById('adminContent');
+
+const userNameEl = document.getElementById('userName');
+const userBalanceEl = document.getElementById('userBalance');
+const userAccountEl = document.getElementById('userAccount');
+
+const kycNameEl = document.getElementById('kycName');
+const kycEmailEl = document.getElementById('kycEmail');
+const kycAccountEl = document.getElementById('kycAccount');
+const kycStatusEl = document.getElementById('kycStatus');
+
+const logoutBtn = document.getElementById('logoutBtn');
+const depositBtn = document.getElementById('depositBtn');
+const transferBtn = document.getElementById('transferBtn');
+const withdrawBtn = document.getElementById('withdrawBtn');
+
+const dashboardBtn = document.getElementById('dashboardBtn');
+const kycBtn = document.getElementById('kycBtn');
+const historyBtn = document.getElementById('historyBtn');
+
+const modal = document.getElementById('modal');
+const modalClose = document.getElementById('modalClose');
+const modalTitle = document.getElementById('modalTitle');
+const modalAmount = document.getElementById('modalAmount');
+const modalAddress = document.getElementById('modalAddress');
+const modalConfirm = document.getElementById('modalConfirm');
+
+const addUserBtn = document.getElementById('addUserBtn');
+const usersTable = document.getElementById('usersTable');
+
+// LOGIN
+loginBtn.onclick = async ()=>{
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+  if(!email || !password){ alert("Enter email & password"); return; }
+  try{
+    const userCred = await signInWithEmailAndPassword(auth,email,password);
+    const snap = await getDoc(doc(db,"users",userCred.user.uid));
+    if(!snap.exists()){ alert("User not found"); return; }
+    const data = snap.data();
+    currentUser = {uid:userCred.user.uid, ...data};
+    loginSection.style.display="none";
+    dashboardSection.style.display="block";
+    if(data.role==="admin"){
+      adminContent.style.display="block";
+    }else{
+      dashboardContent.style.display="block";
+      loadUserDashboard();
+    }
+  }catch(e){ alert("Login failed: "+e.message); }
+};
+
+// LOGOUT
+logoutBtn.onclick = ()=>{
+  currentUser=null;
+  dashboardSection.style.display="none";
+  loginSection.style.display="flex";
+  emailInput.value=''; passwordInput.value='';
+};
+
+// NAVIGATION
+dashboardBtn.onclick=()=>{dashboardContent.style.display="block"; kycContent.style.display="none"; historyContent.style.display="none";}
+kycBtn.onclick=()=>{dashboardContent.style.display="none"; kycContent.style.display="block"; historyContent.style.display="none";}
+historyBtn.onclick=()=>{dashboardContent.style.display="none"; kycContent.style.display="none"; historyContent.style.display="block";}
+
+// USER DASHBOARD
+async function loadUserDashboard(){
+  userNameEl.innerText=currentUser.name;
+  userBalanceEl.innerText=currentUser.balance;
+  userAccountEl.innerText=currentUser.accountNumber || "-";
+  
+  kycNameEl.innerText=currentUser.name;
+  kycEmailEl.innerText=currentUser.email;
+  kycAccountEl.innerText=currentUser.accountNumber || "-";
+  kycStatusEl.innerText=currentUser.KYC || "Not uploaded";
+  
+  depositBtn.onclick=()=>{openModal("Deposit")};
+  transferBtn.onclick=()=>{openModal("Transfer")};
+  withdrawBtn.onclick=()=>{openModal("Withdraw")};
+}
+
+// MODAL LOGIC
+function openModal(type){
+  modalTitle.innerText=type;
+  modalAmount.value="";
+  modalAddress.value="";
+  modal.style.display="flex";
+  modalConfirm.onclick = async ()=>{
+    let amt = parseFloat(modalAmount.value);
+    let addr = modalAddress.value;
+    if(isNaN(amt)||amt<=0){ alert("Invalid amount"); return; }
+    if(type==="Deposit"){
+      currentUser.balance+=amt;
+      await updateDoc(doc(db,"users",currentUser.uid),{balance: currentUser.balance});
+      userBalanceEl.innerText=currentUser.balance;
+      alert("Deposit successful!");
+    }else{
+      alert(`${type} request of $${amt} redirected to ${addr}`);
+    }
+    modal.style.display="none";
+  };
+}
+
+modalClose.onclick=()=>{modal.style.display="none"};
+
+// ADMIN: ADD USER
+addUserBtn.onclick = async ()=>{
+  const name = document.getElementById('addUserName').value.trim();
+  const email = document.getElementById('addUserEmail').value.trim();
+  const pass = document.getElementById('addUserPass').value.trim();
+  const account = document.getElementById('addUserAccount').value.trim();
+  const balance = parseFloat(document.getElementById('addUserBalance').value.trim()||0);
+  const address = document.getElementById('addUserAddress').value.trim();
+  if(!name||!email||!pass){ alert("Fill all fields"); return; }
+  try{
+    const userCred = await createUserWithEmailAndPassword(auth,email,pass);
+    await addDoc(collection(db,"users"),{
+      uid:userCred.user.uid,
+      name,email,role:"user",balance,accountNumber:account,paymentAddress:address,KYC:"Not uploaded"
+    });
+    alert("User added!");
+    loadUsers();
+  }catch(e){ alert("Failed: "+e.message);}
+}
+
+// LOAD USERS
+async function loadUsers(){
+  usersTable.innerHTML="";
+  const snap = await getDocs(collection(db,"users"));
+  snap.forEach(d=>{
+    const u=d.data();
+    if(u.role!=="admin"){
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${u.name}</td><td>${u.email}</td><td>${u.balance}</td><td>${u.accountNumber}</td>
+      <td><button onclick="alert('Manage user')">Manage</button></td>`;
+      usersTable.appendChild(tr);
+    }
+  })
+}
+
+</script>
+
+</body>
+</html>
