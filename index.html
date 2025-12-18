@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>N26 Mobile Bank</title>
+<title>N26 Bank - Firebase Demo</title>
 <style>
 /* --- RESET & BASE --- */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Helvetica Neue',Arial,sans-serif}
@@ -143,10 +144,9 @@ tr:hover{background:#f1f5f9}
   </div>
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, arrayUnion } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCpGwKbyOW_LQPrTKoNvDjW_oTD9_cxsnc",
@@ -161,7 +161,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 let currentUser = null;
 
-// Initialize Admin Account
+// Initialize Admin
 async function initAdmin(){
   const adminRef = doc(db,"users","admin");
   const adminSnap = await getDoc(adminRef);
@@ -180,33 +180,68 @@ async function initAdmin(){
 }
 initAdmin();
 
-// ---------------- LOGIN ----------------
-async function login(){
-  const u=document.getElementById("loginUser").value.trim();
-  const p=document.getElementById("loginPass").value.trim();
-  const userRef=doc(db,"users",u);
-  const userSnap=await getDoc(userRef);
-  if(userSnap.exists()){
-    const data=userSnap.data();
-    if(data.password===p){
-      currentUser=u;
-      document.getElementById("loginPage").style.display="none";
+// --------- LOGIN WITH CACHE ---------
+async function login() {
+  const loginMsg = document.getElementById("loginMsg");
+  loginMsg.style.color = "black";
+  loginMsg.innerText = "Logging in...";
+
+  const username = document.getElementById("loginUser").value.trim();
+  const password = document.getElementById("loginPass").value.trim();
+
+  // Check localStorage first
+  const cached = localStorage.getItem(`user_${username}`);
+  if (cached) {
+    const data = JSON.parse(cached);
+    if (data.password === password) {
+      currentUser = username;
+      document.getElementById("loginPage").style.display = "none";
       initBankApp();
-    } else {document.getElementById("loginMsg").innerText="Invalid password";}
-  } else {document.getElementById("loginMsg").innerText="User not found";}
+      loginMsg.innerText = "";
+      return;
+    } else {
+      loginMsg.style.color = "red";
+      loginMsg.innerText = "Invalid password";
+      return;
+    }
+  }
+
+  // Fetch from Firestore if not cached
+  const userRef = doc(db, "users", username);
+  const userSnap = await getDoc(userRef);
+  if (userSnap.exists()) {
+    const data = userSnap.data();
+    if (data.password === password) {
+      currentUser = username;
+      document.getElementById("loginPage").style.display = "none";
+      initBankApp();
+      loginMsg.innerText = "";
+      localStorage.setItem(`user_${username}`, JSON.stringify(data));
+    } else {
+      loginMsg.style.color = "red";
+      loginMsg.innerText = "Invalid password";
+    }
+  } else {
+    loginMsg.style.color = "red";
+    loginMsg.innerText = "User not found";
+  }
 }
 
-// ---------------- BANK APP ----------------
+// Update cache
+function updateLocalCache(user,data){
+  localStorage.setItem(`user_${user}`, JSON.stringify(data));
+}
+
+// --------- BANK APP ---------
 async function initBankApp(){
-  document.getElementById("bankApp").classList.remove("hidden");
   const data=(await getDoc(doc(db,"users",currentUser))).data();
+  document.getElementById("bankApp").classList.remove("hidden");
   document.getElementById("welcomeUser").innerText="Welcome, "+currentUser;
   document.getElementById("profilePic").src=data.photo||"";
   document.getElementById("userName").innerText=data.name||currentUser;
   document.getElementById("balance").innerText=data.balance||0;
   document.getElementById("accountNumber").innerText=data.account||"N/A";
 
-  // Load KYC
   document.getElementById("kycName").value=data.name||"";
   document.getElementById("kycAccount").value=data.account||"";
   document.getElementById("kycAddress").value=data.address||"";
@@ -214,7 +249,7 @@ async function initBankApp(){
   loadTransactions();
 }
 
-// Toggle sidebar
+// Sidebar toggle
 function toggleSidebar(){
   const sb=document.getElementById("sidebar");
   const ov=document.getElementById("overlay");
@@ -230,11 +265,9 @@ function showPage(pageId){
 }
 
 // Logout
-function logout(){
-  location.reload();
-}
+function logout(){location.reload();}
 
-// ---------------- KYC ----------------
+// --------- KYC ---------
 async function submitKYC(){
   const name=document.getElementById("kycName").value.trim();
   const account=document.getElementById("kycAccount").value.trim();
@@ -246,32 +279,34 @@ async function submitKYC(){
     reader.onload=async function(e){
       photo=e.target.result;
       await updateDoc(doc(db,"users",currentUser),{name,account,address,photo});
+      updateLocalCache(currentUser,{...JSON.parse(localStorage.getItem(`user_${currentUser}`)),name,account,address,photo});
       alert("KYC Submitted Successfully");
       initBankApp();
     }
     reader.readAsDataURL(photoInput.files[0]);
   } else {
     await updateDoc(doc(db,"users",currentUser),{name,account,address});
+    updateLocalCache(currentUser,{...JSON.parse(localStorage.getItem(`user_${currentUser}`)),name,account,address});
     alert("KYC Submitted Successfully");
     initBankApp();
   }
 }
 
-// ---------------- TRANSACTIONS ----------------
+// --------- TRANSACTIONS ---------
 async function requestTransaction(){
   const amt=parseFloat(document.getElementById("amt").value);
   const type=document.getElementById("txnType").value;
   if(!amt || amt<=0){alert("Enter valid amount"); return;}
+  const userRef=doc(db,"users",currentUser);
+  const data=(await getDoc(userRef)).data();
   const txn={type,amount:amt,status:type==="Deposit"?"Successful":"Pending (Contact Support)",date:new Date().toLocaleString()};
-  await updateDoc(doc(db,"users",currentUser),{
-    history: arrayUnion(txn),
-    balance: type==="Deposit" ? (await getDoc(doc(db,"users",currentUser))).data().balance+amt : (await getDoc(doc(db,"users",currentUser))).data().balance
-  });
+  const newBalance = type==="Deposit"?data.balance+amt:data.balance;
+  await updateDoc(userRef,{history: arrayUnion(txn), balance: newBalance});
+  updateLocalCache(currentUser,{...data,history:[...(data.history||[]),txn],balance:newBalance});
   alert(type+" Transaction Placed");
   loadTransactions();
 }
 
-// Load transactions
 async function loadTransactions(){
   const data=(await getDoc(doc(db,"users",currentUser))).data();
   const txList=document.getElementById("txList");
@@ -285,7 +320,7 @@ async function loadTransactions(){
   }
 }
 
-// ---------------- ADMIN ----------------
+// --------- ADMIN ---------
 async function adminLoginPrompt(){
   const user=prompt("Admin Username:");
   const pass=prompt("Admin Password:");
@@ -295,7 +330,6 @@ async function adminLoginPrompt(){
   } else alert("Invalid Admin Login");
 }
 
-// Create user
 async function createUser(){
   const u=document.getElementById("newUser").value.trim();
   const p=document.getElementById("newPass").value.trim();
@@ -310,7 +344,6 @@ async function createUser(){
   loadAdminPanel();
 }
 
-// Fund user
 async function fundUserBalance(){
   const u=document.getElementById("fundUser").value.trim();
   const amt=parseFloat(document.getElementById("fundAmt").value);
@@ -320,17 +353,15 @@ async function fundUserBalance(){
   if(!userSnap.exists()){alert("User not found"); return;}
   const data=userSnap.data();
   const txn={type:"Deposit",amount:amt,status:"Successful",date:new Date().toLocaleString()};
-  await updateDoc(userRef,{
-    balance:data.balance+amt,
-    history: arrayUnion(txn)
-  });
+  const newBalance=data.balance+amt;
+  await updateDoc(userRef,{balance:newBalance,history: arrayUnion(txn)});
+  updateLocalCache(u,{...data,history:[...(data.history||[]),txn],balance:newBalance});
   alert("User Funded Successfully");
   document.getElementById("fundUser").value="";
   document.getElementById("fundAmt").value="";
   loadAdminPanel();
 }
 
-// Load Admin Panel
 async function loadAdminPanel(){
   const tbody=document.querySelector("#adminTable tbody");
   tbody.innerHTML="";
@@ -344,7 +375,6 @@ async function loadAdminPanel(){
   });
 }
 
-// Approve Transaction
 async function approveTxn(user){
   const userRef=doc(db,"users",user);
   const data=(await getDoc(userRef)).data();
@@ -352,23 +382,12 @@ async function approveTxn(user){
   const newHistory=data.history.map(tx=>{
     if(tx.status==="Pending (Contact Support)" && !updated){updated=true; return {...tx,status:"Successful"};} return tx;
   });
-  await updateDoc(userRef,{history:newHistory,balance:data.balance});
+  await updateDoc(userRef,{history:newHistory});
+  updateLocalCache(user,{...data,history:newHistory});
   loadAdminPanel();
   alert("Transaction Approved");
 }
 
-// Reject Transaction
 async function rejectTxn(user){
   const userRef=doc(db,"users",user);
   const data=(await getDoc(userRef)).data();
-  let updated=false;
-  const newHistory=data.history.map(tx=>{
-    if(tx.status==="Pending (Contact Support)" && !updated){updated=true; return {...tx,status:"Rejected"};} return tx;
-  });
-  await updateDoc(userRef,{history:newHistory});
-  loadAdminPanel();
-  alert("Transaction Rejected");
-}
-</script>
-</body>
-  </html>
