@@ -1,203 +1,315 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>N26 Bank – Firebase Banking App</title>
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-
+<title>N26 Local Demo Bank</title>
 <style>
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8}
+/* --- RESET & BASE --- */
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Helvetica Neue',Arial,sans-serif}
+body{background:#f0f2f5;color:#111;overflow-x:hidden;transition:0.3s}
 .hidden{display:none}
-.sidebar{width:230px;background:#0b2c4a;color:#fff;padding:20px;position:fixed;left:-240px;top:0;height:100vh;transition:.3s}
-.sidebar.active{left:0}
-.sidebar a{display:block;color:#fff;text-decoration:none;padding:10px;border-radius:6px;margin-bottom:6px}
-.sidebar a:hover{background:#144a7c}
-.main{padding:20px}
-.card{background:#fff;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
-.btn{padding:10px 14px;border:none;border-radius:6px;cursor:pointer}
-.btn-primary{background:#0b2c4a;color:#fff}
-.btn-success{background:#27ae60;color:#fff}
-.btn-danger{background:#c0392b;color:#fff}
-.menu-btn{font-size:22px;cursor:pointer}
-.login-box{max-width:360px;margin:120px auto;background:#fff;padding:30px;border-radius:10px}
-input{width:100%;padding:10px;margin:8px 0}
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #ccc;padding:8px}
-.badge{padding:4px 10px;border-radius:12px;font-size:12px}
-.ok{background:#27ae60;color:#fff}
-.pending{background:#f39c12;color:#fff}
-.toast{position:fixed;bottom:20px;right:20px;background:#0b2c4a;color:#fff;padding:12px;border-radius:8px;display:none}
+.card{background:#fff;padding:25px;margin-bottom:25px;border-radius:20px;box-shadow:0 10px 25px rgba(0,0,0,.08);transition:0.3s}
+.card:hover{box-shadow:0 15px 35px rgba(0,0,0,.15)}
+button{background:#0052cc;color:#fff;border:none;padding:12px;border-radius:12px;cursor:pointer;width:100%;font-weight:bold;transition:0.3s;font-size:16px}
+button:hover{background:#003c99}
+input,select,textarea{width:100%;padding:12px;margin:10px 0;border-radius:12px;border:1px solid #ccc;font-size:16px;transition:0.2s}
+input:focus, select:focus, textarea:focus{border-color:#0052cc;outline:none}
+.sidebar{position:fixed;top:0;left:-260px;width:260px;height:100%;background:#002d72;color:#fff;padding:25px;transition:.4s;z-index:100;overflow-y:auto;}
+.sidebar.show{left:0}
+.sidebar a{display:flex;align-items:center;color:#fff;padding:15px;margin-bottom:12px;border-radius:15px;text-decoration:none;font-weight:bold;cursor:pointer;transition:0.3s}
+.sidebar a:hover{background:rgba(255,255,255,0.1)}
+.sidebar a span{margin-left:10px}
+.header{background:linear-gradient(90deg,#0052cc,#002d72);color:#fff;padding:18px 25px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;border-bottom-left-radius:20px;border-bottom-right-radius:20px;box-shadow:0 5px 15px rgba(0,0,0,0.1)}
+.profile-img{width:120px;height:120px;border-radius:50%;object-fit:cover;margin-bottom:15px;border:4px solid #0052cc;transition:0.3s}
+.profile-img:hover{transform:scale(1.05)}
+.small{font-size:13px;color:#666}
+h2,h3,h4{margin-bottom:12px;font-weight:600}
+#overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);display:none;z-index:50;transition:0.3s}
+table{width:100%;border-collapse:collapse;margin-top:15px;transition:0.3s}
+table, th, td{border:1px solid #ccc}
+th,td{padding:12px;text-align:center}
+th{background:#0052cc;color:#fff}
+tr:hover{background:#f1f5f9}
+.approved{color:green;font-weight:bold}
+.rejected{color:red;font-weight:bold}
+.pending{color:orange;font-weight:bold}
+@media(max-width:768px){.header{border-radius:0} .sidebar{width:220px}}
 </style>
 </head>
 <body>
 
-<div id="toast" class="toast"></div>
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div class="card" style="max-width:380px;margin:120px auto;text-align:center;">
+    <h2>🔐 Login</h2>
+    <input id="loginUser" placeholder="Username">
+    <input id="loginPass" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p id="loginMsg" style="color:red;margin-top:10px"></p>
+  </div>
+</div>
 
-<!-- LOGIN -->
-<section id="loginPage" class="login-box">
-<h2>N26 Bank Login</h2>
-<input id="loginEmail" placeholder="Email">
-<input id="loginPass" type="password" placeholder="Password">
-<button class="btn btn-primary" onclick="login()">Login</button>
-<p id="loginError" style="color:red"></p>
-</section>
+<!-- Overlay -->
+<div id="overlay" onclick="toggleSidebar()"></div>
 
-<!-- SIDEBAR -->
-<nav id="sidebar" class="sidebar">
-<h3>N26 Bank</h3>
-<a onclick="show('dashboard')">Dashboard</a>
-<a onclick="show('kyc')">KYC</a>
-<a onclick="show('history')">History</a>
-<a onclick="show('admin')">Admin Panel</a>
-<a onclick="logout()">Logout</a>
-</nav>
+<!-- BANK APP -->
+<div id="bankApp" class="hidden">
 
-<!-- APP -->
-<main id="app" class="main hidden">
-<div class="menu-btn" onclick="sidebar.classList.toggle('active')">☰</div>
+  <!-- Header -->
+  <div id="header" class="header">
+    <span onclick="toggleSidebar()" style="cursor:pointer;font-size:22px;">☰</span>
+    <span id="welcomeUser" style="font-weight:bold"></span>
+  </div>
 
-<section id="dashboard" class="card">
-<h3>Dashboard</h3>
-<p><b>Email:</b> <span id="uEmail"></span></p>
-<p>KYC Status: <span id="kycStatus" class="badge pending">Pending</span></p>
-<h2>Balance: $<span id="balance">0</span></h2>
-<button class="btn btn-success" onclick="createTx('Deposit')">Deposit</button>
-<button class="btn btn-danger" onclick="createTx('Withdrawal')">Withdraw</button>
-</section>
+  <!-- Sidebar -->
+  <div id="sidebar" class="sidebar">
+    <h3 style="margin-bottom:20px;">N26 Bank</h3>
+    <a onclick="showPage('dashboard')">🏦 <span>Dashboard</span></a>
+    <a onclick="showPage('kyc')">🪪 <span>KYC</span></a>
+    <a onclick="showPage('history')">📜 <span>Transaction History</span></a>
+    <a id="adminLink" onclick="adminLoginPrompt()">🛠️ <span>Admin Panel</span></a>
+    <a onclick="logout()">🚪 <span>Logout</span></a>
+  </div>
 
-<section id="kyc" class="card hidden">
-<h3>KYC Upload</h3>
-<input type="file" id="kycFile">
-<button class="btn btn-primary" onclick="submitKYC()">Submit KYC</button>
-</section>
+  <!-- Pages -->
+  <div id="pagesContainer">
 
-<section id="history" class="card hidden">
-<h3>Transaction History</h3>
-<div id="txList"></div>
-</section>
+    <!-- Dashboard -->
+    <div id="dashboard" class="page hidden">
+      <div class="card" style="text-align:center;">
+        <img id="profilePic" src="" class="profile-img" alt="Profile">
+        <h3 id="userName"></h3>
+        <p>Account #: <span id="accountNumber"></span></p>
+        <h2>Balance: $<span id="balance"></span></h2>
+      </div>
+      <div class="card">
+        <h3>Deposit / Withdraw</h3>
+        <input id="amt" type="number" placeholder="Amount">
+        <select id="txnType"><option value="Deposit">Deposit</option><option value="Withdraw">Withdraw</option></select>
+        <button onclick="requestTransaction()">Place Transaction</button>
+        <p class="small">Transactions are recorded immediately and withdrawals are pending admin approval.</p>
+      </div>
+    </div>
 
-<section id="admin" class="card hidden">
-<h3>Admin Panel – N26 Bank</h3>
-<h4>Add User</h4>
-<input id="newEmail" placeholder="User Email">
-<input id="newPass" placeholder="Password">
-<input id="newBalance" type="number" placeholder="Initial Balance">
-<button class="btn btn-primary" onclick="adminAddUser()">Add User</button>
+    <!-- KYC -->
+    <div id="kyc" class="page hidden">
+      <div class="card">
+        <h3>KYC Verification</h3>
+        <input id="kycName" placeholder="Full Name" readonly>
+        <input id="kycAccount" placeholder="Account Number" readonly>
+        <input id="kycAddress" placeholder="Address" readonly>
+        <input type="file" id="kycPhoto" readonly>
+        <button id="kycSubmitBtn" onclick="submitKYC()">Submit KYC</button>
+      </div>
+    </div>
 
-<h4>Pending Transactions</h4>
-<table>
-<thead><tr><th>User</th><th>Type</th><th>Amount</th><th>Action</th></tr></thead>
-<tbody id="pendingTx"></tbody>
-</table>
-</section>
-</main>
+    <!-- Transaction History -->
+    <div id="history" class="page hidden">
+      <div class="card">
+        <h3>Transaction History</h3>
+        <div id="txList"></div>
+      </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin" class="page hidden">
+      <div class="card">
+        <h3>Admin Panel - Manage Users</h3>
+        <input id="newUser" placeholder="Username">
+        <input id="newPass" placeholder="Password">
+        <button onclick="createUser()">Create User</button>
+        <input id="fundUser" placeholder="Username to Fund">
+        <input id="fundAmt" type="number" placeholder="Amount to Add">
+        <button onclick="fundUserBalance()">Fund User</button>
+      </div>
+      <div class="card">
+        <h4>All Users & Pending Transactions</h4>
+        <table id="adminTable">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Password</th>
+              <th>Balance</th>
+              <th>Transactions</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <script>
-/* FIREBASE CONFIG */
-const firebaseConfig = {
-  apiKey: "AIzaSyCpGwKbyOW_LQPrTKoNvDjW_oTD9_cxsnc",
-  authDomain: "n26-bank-888bc.firebaseapp.com",
-  projectId: "n26-bank-888bc",
-  storageBucket: "n26-bank-888bc.appspot.com",
-  messagingSenderId: "112126821080",
-  appId: "1:112126821080:web:c108cc61d84a25f5290dad"
-};
+// --- USERS & CURRENT LOGIN ---
+let users = JSON.parse(localStorage.getItem("users") || '{}');
+if(!users.admin){users.admin={password:"Admin1234!",role:"admin",balance:0,name:"Admin",account:"000001",photo:"",address:"",history:[]};saveUsers();}
+let currentUser = localStorage.getItem("currentUser") || null;
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const storage = firebase.storage();
-
-// SECONDARY APP (CRITICAL FIX)
-const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
-const secondaryAuth = firebase.auth(secondaryApp);
-
-const adminEmail = "admin@bankapp.com";
-let currentUser;
-
-const toastMsg = msg => {toast.innerText=msg;toast.style.display='block';setTimeout(()=>toast.style.display='none',2500)};
-function show(id){['dashboard','kyc','history','admin'].forEach(x=>document.getElementById(x).classList.add('hidden'));document.getElementById(id).classList.remove('hidden');sidebar.classList.remove('active')}
-
-async function login(){
- try{
-  const res = await auth.signInWithEmailAndPassword(loginEmail.value, loginPass.value);
-  currentUser=res.user;
-  loginPage.classList.add('hidden'); app.classList.remove('hidden');
-  uEmail.innerText=currentUser.email;
-  if(currentUser.email===adminEmail) show('admin'); else show('dashboard');
-  loadUser();
- }catch(e){loginError.innerText=e.message}
+// --- LOGIN ---
+function login(){
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value.trim();
+  if(users[u] && users[u].password===p){
+    currentUser = u;
+    localStorage.setItem("currentUser", u);
+    document.getElementById("loginPage").style.display="none";
+    initBankApp();
+  } else {document.getElementById("loginMsg").innerText="Invalid username or password!";}
 }
 
-function logout(){auth.signOut().then(()=>location.reload())}
-
-async function loadUser(){
- const snap = await db.collection('users').doc(currentUser.uid).get();
- if(snap.exists){
-  const d=snap.data();
-  balance.innerText=d.balance||0;
-  kycStatus.innerText=d.kyc||'Pending';
-  kycStatus.className='badge '+(d.kyc==='Verified'?'ok':'pending');
- }
- loadTx();
+// --- INIT BANK APP ---
+function initBankApp(){
+  document.getElementById("bankApp").classList.remove("hidden");
+  document.getElementById("welcomeUser").innerText=currentUser;
+  if(users[currentUser].role!=="admin") document.getElementById("adminLink").style.display="none";
+  showPage("dashboard"); updateDashboard(); prepareKYC();
+  if(users[currentUser].role==="admin"){setInterval(loadAdminPanel,3000);}
 }
 
-async function submitKYC(){
- const file=kycFile.files[0]; if(!file) return alert('Upload file');
- const ref=storage.ref(`kyc/${currentUser.uid}`);
- await ref.put(file);
- const url=await ref.getDownloadURL();
- await db.collection('users').doc(currentUser.uid).set({kyc:'Submitted',kycFile:url},{merge:true});
- toastMsg('KYC submitted'); loadUser();
+// --- SIDEBAR ---
+function toggleSidebar(){
+  const sb=document.getElementById("sidebar");
+  const overlay=document.getElementById("overlay");
+  sb.classList.toggle("show");
+  overlay.style.display=sb.classList.contains("show")?"block":"none";
 }
 
-async function createTx(type){
- const amt=+prompt('Amount'); if(!amt) return;
- await db.collection('transactions').add({uid:currentUser.uid,email:currentUser.email,type,amount:amt,status:'Pending',time:Date.now()});
- toastMsg('Transaction pending'); loadTx();
+// --- NAVIGATION ---
+function showPage(p){
+  document.querySelectorAll(".page").forEach(d=>d.classList.add("hidden"));
+  document.getElementById(p).classList.remove("hidden");
+  document.getElementById("sidebar").classList.remove("show");
+  document.getElementById("overlay").style.display="none";
+  if(p==="dashboard") updateDashboard();
+  if(p==="history") loadTransactions();
+  if(p==="admin") loadAdminPanel();
 }
 
-async function loadTx(){
- txList.innerHTML='';
- const q=await db.collection('transactions').where('uid','==',currentUser.uid).get();
- q.forEach(d=>{const t=d.data();txList.innerHTML+=`<p>${t.type}: $${t.amount} - <b>${t.status}</b></p>`});
- if(currentUser.email===adminEmail) loadPending();
+// --- LOGOUT ---
+function logout(){localStorage.removeItem("currentUser");location.reload();}
+
+// --- DASHBOARD ---
+function updateDashboard(){
+  const u = users[currentUser];
+  document.getElementById("userName").innerText = u.name||currentUser;
+  document.getElementById("accountNumber").innerText = u.account||"N/A";
+  document.getElementById("balance").innerText = (u.balance||0).toFixed(2);
+  document.getElementById("profilePic").src = u.photo||"https://via.placeholder.com/120";
 }
 
-async function loadPending(){
- pendingTx.innerHTML='';
- const q=await db.collection('transactions').where('status','==','Pending').get();
- q.forEach(doc=>{const t=doc.data();pendingTx.innerHTML+=`<tr><td>${t.email}</td><td>${t.type}</td><td>$${t.amount}</td><td><button onclick="approveTx('${doc.id}',${t.amount},'${t.uid}')">Approve</button></td></tr>`});
+// --- KYC ---
+function prepareKYC(){
+  const u=users[currentUser];
+  const kName=document.getElementById("kycName");
+  const kAcc=document.getElementById("kycAccount");
+  const kAddr=document.getElementById("kycAddress");
+  const kPhoto=document.getElementById("kycPhoto");
+  const btn=document.getElementById("kycSubmitBtn");
+  if(u.name && u.account && u.photo && u.address){
+    kName.value=u.name; kAcc.value=u.account; kAddr.value=u.address; btn.style.display="none"; kPhoto.style.display="none"; kAddr.setAttribute("readonly","readonly");
+  } else {
+    kName.removeAttribute("readonly"); kAcc.removeAttribute("readonly"); kAddr.removeAttribute("readonly"); kPhoto.removeAttribute("readonly"); btn.style.display="block"; kPhoto.style.display="block";
+  }
+}
+function submitKYC(){
+  const name=document.getElementById("kycName").value.trim();
+  const account=document.getElementById("kycAccount").value.trim();
+  const address=document.getElementById("kycAddress").value.trim();
+  const file=document.getElementById("kycPhoto").files[0];
+  if(!name||!account||!address){alert("Enter all KYC details"); return;}
+  if(file){
+    const reader=new FileReader();
+    reader.onload=function(e){
+      users[currentUser].photo=e.target.result;
+      users[currentUser].name=name; users[currentUser].account=account; users[currentUser].address=address;
+      saveUsers(); alert("KYC saved successfully!"); prepareKYC(); showPage("dashboard");
+    }
+    reader.readAsDataURL(file);
+  } else {alert("Upload passport photo");}
 }
 
-async function approveTx(id,amt,uid){
- const uref=db.collection('users').doc(uid);
- await db.runTransaction(async tr=>{
-  const us=await tr.get(uref);
-  tr.update(uref,{balance:(us.data().balance||0)+amt});
-  tr.update(db.collection('transactions').doc(id),{status:'Approved'});
- });
- toastMsg('Transaction approved'); loadPending(); loadUser();
+// --- TRANSACTIONS ---
+function requestTransaction(){
+  const amt=parseFloat(document.getElementById("amt").value);
+  const type=document.getElementById("txnType").value;
+  if(isNaN(amt)||amt<=0){alert("Enter valid amount"); return;}
+  const txObj={user:currentUser,type,amount:amt,status:type==="Deposit"?"approved":"pending",date:new Date().toLocaleString()};
+  users[currentUser].history.push({...txObj});
+  if(type==="Deposit") users[currentUser].balance+=amt;
+  saveUsers(); document.getElementById("amt").value="";
+  alert(type==="Deposit"?"Deposit Successful":"Transaction placed and pending admin approval.");
 }
 
-async function adminAddUser(){
- const email=newEmail.value.trim();
- const pass=newPass.value.trim();
- const bal=+newBalance.value||0;
- if(!email||!pass) return alert('Fill all fields');
- try{
-  const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
-  await db.collection('users').doc(cred.user.uid).set({balance:bal,kyc:'Pending',bank:'N26 Bank'});
-  secondaryAuth.signOut();
-  toastMsg('User added successfully');
- }catch(e){alert(e.message)}
+// --- LOAD USER HISTORY ---
+function loadTransactions(){
+  const txs=users[currentUser].history||[];
+  document.getElementById("txList").innerHTML=txs.map(t=>{
+    let statusClass=t.status==="pending"?"pending":t.status==="approved"?"approved":"rejected";
+    return `${t.type}: $${t.amount} <span class="${statusClass}">${t.status==="pending"?"Pending (Contact Support)":t.status==="approved"?"Successful":"Rejected"}</span><br><span class="small">${t.date}</span>`;
+  }).join("<hr>");
 }
+
+// --- ADMIN LOGIN ---
+function adminLoginPrompt(){
+  const uname=prompt("Admin Username:");
+  const pwd=prompt("Admin Password:");
+  if(uname==="admin"&&pwd==="Admin1234!"){users[currentUser].role="admin"; saveUsers(); showPage("admin");} else alert("Wrong admin credentials!");
+}
+
+// --- ADMIN FUNCTIONS ---
+function createUser(){
+  const u=document.getElementById("newUser").value.trim();
+  const p=document.getElementById("newPass").value.trim();
+  if(!u||!p){alert("Enter username and password"); return;}
+  if(users[u]){alert("User exists"); return;}
+  users[u]={password:p,role:"user",balance:0,name:"",account:"",photo:"",address:"",history:[]};
+  saveUsers(); loadAdminPanel(); alert("User created successfully!");
+}
+function fundUserBalance(){
+  const u=document.getElementById("fundUser").value.trim();
+  const amt=parseFloat(document.getElementById("fundAmt").value);
+  if(!users[u]||isNaN(amt)||amt<=0){alert("Invalid user or amount"); return;}
+  users[u].balance+=amt;
+  users[u].history.push({user:u,type:"Deposit",amount:amt,status:"approved",date:new Date().toLocaleString()});
+  saveUsers(); loadAdminPanel(); if(currentUser===u) loadTransactions(); alert("User funded successfully!");
+}
+
+// --- ADMIN PANEL TABLE ---
+function loadAdminPanel(){
+  const tbody=document.querySelector("#adminTable tbody"); tbody.innerHTML="";
+  Object.keys(users).forEach(u=>{
+    if(u==="admin") return;
+    const user=users[u];
+    const txsHtml=user.history.map((t,i)=>{
+      let statusClass=t.status==='pending'?'pending':t.status==='approved'?'approved':'rejected';
+      return `${t.type}: $${t.amount} <span class="${statusClass}">${t.status==='pending'?'Pending':t.status==='approved'?'Successful':'Rejected'}</span>`;
+    }).join("<br>");
+    const actionBtns=user.history.map((t,i)=>{return t.status==="pending"?`<button onclick="adminApprove('${u}',${i})">✅</button> <button onclick="adminReject('${u}',${i})">❌</button>`:""}).join(" ");
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${u}</td><td>${user.password}</td><td>${user.balance.toFixed(2)}</td><td>${txsHtml}</td><td>${actionBtns}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// --- ADMIN APPROVE/REJECT ---
+function adminApprove(user,idx){
+  const t=users[user].history[idx];
+  if(t.type==="Withdraw" && users[user].balance<t.amount){alert("Insufficient balance"); return;}
+  if(t.type==="Withdraw") users[user].balance-=t.amount; else users[user].balance+=t.amount;
+  t.status="approved"; saveUsers(); loadAdminPanel(); if(currentUser===user) loadTransactions(); updateDashboard();
+}
+function adminReject(user,idx){users[user].history[idx].status="rejected"; saveUsers(); loadAdminPanel(); if(currentUser===user) loadTransactions(); updateDashboard();}
+
+// --- SAVE USERS ---
+function saveUsers(){localStorage.setItem("users",JSON.stringify(users)); updateDashboard();}
+
+// --- AUTO LOGIN ---
+if(currentUser){document.getElementById("loginPage").style.display="none"; initBankApp();}
 </script>
 </body>
-  </html>
+</html>
