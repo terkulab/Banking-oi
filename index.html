@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Citibank - Login</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body { font-family: Arial, sans-serif; background: #f4f6f8; margin:0; }
+.container { max-width:400px; margin:auto; padding:30px; margin-top:100px; background:white; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,.12);}
+input { width:100%; padding:12px; margin-bottom:12px; border-radius:6px; border:1px solid #ccc; }
+button { width:100%; padding:12px; border:none; border-radius:6px; background:#003366; color:white; cursor:pointer; font-size:16px; }
+button:hover { background:#0055a5; }
+h2 { text-align:center; color:#003366; }
+p { text-align:center; margin-top:10px; }
+a { color:#003366; text-decoration:none; }
+a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Login</h2>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <p>Don't have an account? <a href="#" onclick="showSignup()">Sign Up</a></p>
+  <div id="msg" style="color:red;text-align:center;margin-top:10px;"></div>
+</div>
+
+<script type="module">
+const supabase = supabase.createClient(
+  "https://aaljhxyrqnewvhejtoik.supabase.co",
+  "sb_publishable_52hZQtxrDZB4k_fLi8S0GQ_j5wma9lz"
+);
+
+function showSignup(){
+  const container = document.querySelector('.container');
+  container.innerHTML = `
+    <h2>Sign Up</h2>
+    <input id="name" placeholder="Full Name">
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="signup()">Sign Up</button>
+    <p>Already have account? <a href="#" onclick="location.reload()">Login</a></p>
+    <div id="msg" style="color:red;text-align:center;margin-top:10px;"></div>
+  `;
+}
+
+async function login(){
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const { data, error } = await supabase.from('users').select('*').eq('username', username).single();
+  const msg = document.getElementById('msg');
+  if(error || !data){ msg.textContent='Invalid username'; return; }
+  if(password !== data.password){ msg.textContent='Invalid password'; return; }
+  localStorage.setItem('currentUser', JSON.stringify(data));
+  if(data.role==='admin'){ window.location.href='admin-dashboard.html'; return; }
+  window.location.href='dashboard.html';
+}
+
+async function signup(){
+  const name=document.getElementById('name').value;
+  const username=document.getElementById('username').value;
+  const password=document.getElementById('password').value;
+  const msg=document.getElementById('msg');
+  if(!name||!username||!password){ msg.textContent='All fields required'; return; }
+  const { data:exists } = await supabase.from('users').select('*').eq('username',username).single();
+  if(exists){ msg.textContent='Username exists'; return; }
+  const { data, error } = await supabase.from('users').insert({
+    name, username, password, acct:'ACCT'+Math.floor(Math.random()*1000000), balance:0
+  }).select().single();
+  if(error){ msg.textContent=error.message; return; }
+  localStorage.setItem('currentUser', JSON.stringify(data));
+  window.location.href='dashboard.html';
+}
+</script>
+</body>
+</html>

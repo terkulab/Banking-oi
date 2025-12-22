@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KYC Verification - Citibank</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial;background:#f4f6f8;}
+.container{max-width:500px;margin:50px auto;padding:30px;background:white;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,.12);}
+h2{text-align:center;color:#003366;}
+input,select{width:100%;padding:10px;margin-bottom:12px;border-radius:6px;border:1px solid #ccc;}
+button{width:100%;padding:12px;background:#003366;color:white;border:none;border-radius:6px;cursor:pointer;font-size:16px;}
+button:hover{background:#0055a5;}
+.status{padding:10px;border-radius:8px;margin-bottom:15px;text-align:center;font-weight:bold;}
+.Pending{background:#fff3cd;color:#856404;}
+.Approved{background:#d4edda;color:#155724;}
+.Rejected{background:#f8d7da;color:#721c24;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>KYC Verification</h2>
+  <div id="kycStatus"></div>
+  <input id="fullName" placeholder="Full Name">
+  <input id="address" placeholder="Residential Address">
+  <select id="idType">
+    <option value="">Select ID Type</option>
+    <option>National ID</option>
+    <option>Passport</option>
+    <option>Driver License</option>
+  </select>
+  <input id="idFile" type="file" accept="image/*,.pdf">
+  <button onclick="submitKYC()">Submit KYC</button>
+  <p id="msg" style="text-align:center;margin-top:10px;"></p>
+</div>
+
+<script type="module">
+const supabase = supabase.createClient(
+  "https://aaljhxyrqnewvhejtoik.supabase.co",
+  "sb_publishable_52hZQtxrDZB4k_fLi8S0GQ_j5wma9lz"
+);
+
+let user = JSON.parse(localStorage.getItem('currentUser'));
+if(!user){ alert('Login required'); location.href='index.html'; }
+
+async function loadKYC(){
+  const { data } = await supabase.from('users').select('kyc_status').eq('id', user.id).single();
+  document.getElementById('kycStatus').innerHTML = `<div class="status ${data.kyc_status}">KYC Status: ${data.kyc_status}</div>`;
+}
+loadKYC();
+
+async function submitKYC(){
+  const fullName = document.getElementById('fullName').value;
+  const address = document.getElementById('address').value;
+  const idType = document.getElementById('idType').value;
+  const file = document.getElementById('idFile').files[0];
+  const msg = document.getElementById('msg');
+
+  if(!fullName || !address || !idType || !file){ msg.textContent='All fields required'; msg.style.color='red'; return; }
+
+  const filePath = `${user.id}/${Date.now()}_${file.name}`;
+  const { error:uploadErr } = await supabase.storage.from('kyc-documents').upload(filePath, file);
+
+  if(uploadErr){ msg.textContent=uploadErr.message; msg.style.color='red'; return; }
+
+  const { data:urlData } = supabase.storage.from('kyc-documents').getPublicUrl(filePath);
+
+  await supabase.from('kyc').upsert({
+    user_id: user.id,
+    full_name: fullName,
+    address: address,
+    id_type: idType,
+    id_url: urlData.publicUrl,
+    status: 'Pending'
+  });
+
+  await supabase.from('users').update({ kyc_status:'Pending' }).eq('id', user.id);
+
+  msg.style.color='green';
+  msg.textContent='KYC submitted successfully';
+  loadKYC();
+}
+</script>
+</body>
+</html>

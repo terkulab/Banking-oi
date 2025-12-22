@@ -1,0 +1,20 @@
+body{margin:0;font-family:Arial;background:#f4f6f8;}
+.topbar{background:#003366;color:white;padding:15px 20px;display:flex;align-items:center;}
+.topbar h2{margin:0;font-size:24px;}
+button{padding:6px 12px;border:none;border-radius:6px;background:#003366;color:white;cursor:pointer;margin-right:4px;}
+button:hover{background:#0055a5;}
+.container{padding:20px;max-width:1000px;margin:auto;}
+.card{background:white;padding:20px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.08);text-align:center;}
+.profile{width:100px;border-radius:50%;margin-bottom:10px;}
+table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,.08);}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #eee;}
+th{background:#f1f5f9;}
+.status-completed{color:#28a745;font-weight:bold;}
+.status-pending{color:#ffc107;font-weight:bold;}
+.status-reversed{color:#dc3545;font-weight:bold;}
+.status-Pending{color:#856404;font-weight:bold;}
+.status-Approved{color:#155724;font-weight:bold;}
+.status-Rejected{color:#721c24;font-weight:bold;}
+.status-Frozen{color:#dc3545;font-weight:bold;}
+.status-Active{color:#28a745;font-weight:bold;}
+input, select{width:100%;padding:10px;margin-bottom:12px;border-radius:6px;border:1px solid #ccc;}

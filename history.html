@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transaction History - Citibank</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial;background:#f4f6f8;}
+.topbar{background:#003366;color:white;padding:15px 20px;display:flex;align-items:center;}
+.topbar h2{margin:0;font-size:24px;}
+.container{padding:20px;max-width:800px;margin:auto;}
+table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,.08);}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #eee;}
+th{background:#f1f5f9;}
+.status-completed{color:#28a745;font-weight:bold;}
+.status-pending{color:#ffc107;font-weight:bold;}
+.status-reversed{color:#dc3545;font-weight:bold;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h2>Transaction History</h2>
+  <button style="margin-left:auto;" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Amount ($)</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody id="txTable"></tbody>
+  </table>
+</div>
+
+<script>
+const supabase = supabase.createClient(
+  "https://aaljhxyrqnewvhejtoik.supabase.co",
+  "sb_publishable_52hZQtxrDZB4k_fLi8S0GQ_j5wma9lz"
+);
+
+let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+if(!currentUser){ alert('Login required'); location.href='index.html'; }
+
+function logout(){
+  localStorage.removeItem('currentUser');
+  location.href='index.html';
+}
+
+async function loadTransactions(){
+  const { data } = await supabase.from('transactions')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending:false });
+
+  const tbody = document.getElementById('txTable');
+  tbody.innerHTML = '';
+
+  data.forEach(tx=>{
+    let statusClass = tx.status==='Completed'?'status-completed':
+                      tx.status==='Pending'?'status-pending':'status-reversed';
+    tbody.innerHTML += `
+      <tr>
+        <td>${tx.type}</td>
+        <td>$${Number(tx.amount).toLocaleString()}</td>
+        <td class="${statusClass}">${tx.status}</td>
+        <td>${new Date(tx.created_at).toLocaleString()}</td>
+      </tr>
+    `;
+  });
+}
+
+// Initial load
+loadTransactions();
+setInterval(loadTransactions,5000); // auto-refresh every 5s
+</script>
+</body>
+</html>

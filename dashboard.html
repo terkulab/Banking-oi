@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Dashboard - Citibank</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial;background:#f4f6f8;}
+.topbar{background:#003366;color:white;padding:15px 20px;display:flex;align-items:center;}
+.topbar h2{margin:0;font-size:24px;}
+.container{padding:20px;max-width:600px;margin:auto;}
+.card{background:white;padding:20px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,.08);text-align:center;}
+.profile{width:100px;border-radius:50%;margin-bottom:10px;}
+h1{margin:15px 0;color:#003366;}
+button{padding:10px 20px;margin:5px;border:none;border-radius:6px;background:#003366;color:white;cursor:pointer;}
+button:hover{background:#0055a5;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h2>Dashboard</h2>
+  <button style="margin-left:auto;" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+  <div class="card">
+    <img id="photo" class="profile" src="" alt="Profile">
+    <h2 id="name"></h2>
+    <p>Account No: <span id="acct"></span></p>
+    <h1 id="balance"></h1>
+    <button onclick="locked()">Transfer</button>
+    <button onclick="locked()">Withdraw</button>
+  </div>
+</div>
+
+<script>
+const supabase = supabase.createClient(
+  "https://aaljhxyrqnewvhejtoik.supabase.co",
+  "sb_publishable_52hZQtxrDZB4k_fLi8S0GQ_j5wma9lz"
+);
+
+let currentUser = JSON.parse(localStorage.getItem('currentUser'));
+if(!currentUser){ alert('Login required'); location.href='index.html'; }
+
+function renderDashboard(){
+  document.getElementById('name').textContent = currentUser.name;
+  document.getElementById('acct').textContent = currentUser.acct;
+  document.getElementById('balance').textContent = '$'+Number(currentUser.balance).toLocaleString();
+  document.getElementById('photo').src = currentUser.photo || 'https://via.placeholder.com/100';
+}
+
+// Locked action
+function locked(){
+  if(currentUser.is_frozen){ alert('Account restricted 🔐 contact support'); return; }
+  alert('Account restricted 🔐 contact support');
+}
+
+// Logout
+function logout(){
+  localStorage.removeItem('currentUser');
+  location.href='index.html';
+}
+
+// Listen for updates (if user info changes in Supabase)
+async function refreshUser(){
+  const { data } = await supabase.from('users').select('*').eq('id', currentUser.id).single();
+  if(data){ currentUser=data; localStorage.setItem('currentUser', JSON.stringify(currentUser)); renderDashboard(); }
+}
+
+// Initial render
+renderDashboard();
+setInterval(refreshUser, 5000); // auto-refresh every 5s
+</script>
+</body>
+</html>

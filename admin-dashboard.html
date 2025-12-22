@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - Citibank</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial;background:#f4f6f8;}
+.topbar{background:#003366;color:white;padding:15px 20px;display:flex;align-items:center;}
+.topbar h2{margin:0;font-size:24px;}
+button{padding:6px 12px;border:none;border-radius:6px;background:#003366;color:white;cursor:pointer;margin-right:4px;}
+button:hover{background:#0055a5;}
+.container{padding:20px;max-width:1000px;margin:auto;}
+table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,.08);}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #eee;}
+th{background:#f1f5f9;}
+.status-Pending{color:#856404;font-weight:bold;}
+.status-Approved{color:#155724;font-weight:bold;}
+.status-Rejected{color:#721c24;font-weight:bold;}
+.status-Frozen{color:#dc3545;font-weight:bold;}
+.status-Active{color:#28a745;font-weight:bold;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h2>Admin Dashboard</h2>
+  <button style="margin-left:auto;" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+  <h3>Users Management</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Username</th>
+        <th>Account No</th>
+        <th>Balance</th>
+        <th>KYC Status</th>
+        <th>Account Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="userTable"></tbody>
+  </table>
+</div>
+
+<script type="module">
+const supabase = supabase.createClient(
+  "https://aaljhxyrqnewvhejtoik.supabase.co",
+  "sb_publishable_52hZQtxrDZB4k_fLi8S0GQ_j5wma9lz"
+);
+
+let adminUser = JSON.parse(localStorage.getItem('currentUser'));
+if(!adminUser || adminUser.role!=='admin'){ alert('Admin access required'); location.href='index.html'; }
+
+function logout(){
+  localStorage.removeItem('currentUser');
+  location.href='index.html';
+}
+
+// Load users
+async function loadUsers(){
+  const { data: users } = await supabase.from('users').select('*').order('name');
+  const tbody = document.getElementById('userTable');
+  tbody.innerHTML='';
+  users.forEach(user=>{
+    let statusClass = user.is_frozen?'status-Frozen':'status-Active';
+    tbody.innerHTML += `
+      <tr>
+        <td>${user.name}</td>
+        <td>${user.username}</td>
+        <td>${user.acct}</td>
+        <td>$${Number(user.balance).toLocaleString()}</td>
+        <td class="status-${user.kyc_status}">${user.kyc_status}</td>
+        <td class="${statusClass}">${user.is_frozen?'Frozen':'Active'}</td>
+        <td>
+          <button onclick="adjustBalance('${user.id}', true)">Add</button>
+          <button onclick="adjustBalance('${user.id}', false)">Deduct</button>
+          <button onclick="toggleFreeze('${user.id}', ${user.is_frozen})">${user.is_frozen?'Unfreeze':'Freeze'}</button>
+          <button onclick="handleKYC('${user.id}', 'Approved')">Approve KYC</button>
+          <button onclick="handleKYC('${user.id}', 'Rejected')">Reject KYC</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+// Adjust Balance
+async function adjustBalance(userId, isAdd){
+  let amount = prompt(`Enter amount to ${isAdd?'add':'deduct'}:`); 
+  amount = parseFloat(amount);
+  if(isNaN(amount) || amount<=0){ alert('Invalid amount'); return; }
+
+  const { data: user } = await supabase.from('users').select('*').eq('id', userId).single();
+  let newBalance = isAdd ? user.balance + amount : user.balance - amount;
+  if(newBalance<0){ alert('Insufficient funds'); return; }
+
+  await supabase.from('users').update({ balance:newBalance }).eq('id', userId);
+  await supabase.from('transactions').insert({
+    user_id:userId,
+    admin_id:adminUser.id,
+    type:isAdd?'Admin Credit':'Admin Debit',
+    amount,
+    status:'Completed'
+  });
+  loadUsers();
+}
+
+// Freeze / Unfreeze
+async function toggleFreeze(userId, isFrozen){
+  await supabase.from('users').update({ is_frozen:!isFrozen }).eq('id', userId);
+  loadUsers();
+}
+
+// Handle KYC
+async function handleKYC(userId, action){
+  await supabase.from('users').update({ kyc_status: action }).eq('id', userId);
+  await supabase.from('kyc').update({ status: action }).eq('user_id', userId);
+  loadUsers();
+}
+
+// Initial load
+loadUsers();
+setInterval(loadUsers, 5000); // auto-refresh
+</script>
+</body>
+</html>
